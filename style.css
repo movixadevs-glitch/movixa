@@ -507,49 +507,6 @@ footer a {
 
 }
 
-/* ===========================
-   RESPONSIVE
-=========================== */
-
-@media(max-width:980px) {
-
-    .hero {
-
-        flex-direction: column;
-
-        text-align: center;
-
-    }
-
-    .hero h1 {
-
-        font-size: 48px;
-
-        line-height: 58px;
-
-    }
-
-    .navbar {
-
-        padding: 0 25px;
-
-    }
-
-    nav {
-
-        display: none;
-
-    }
-
-    section {
-
-        padding: 80px 8%;
-
-    }
-
-
-}
-
 /* =====================================================
    MOVIXA PAGE
 ===================================================== */
@@ -822,15 +779,43 @@ footer a {
 
 }
 
-/* RESPONSIVO */
+/* ===========================
+   RESPONSIVE
+=========================== */
 
-@media(max-width:900px) {
+@media(max-width:980px) {
 
     .hero {
 
         flex-direction: column;
 
         text-align: center;
+
+    }
+
+    .hero h1 {
+
+        font-size: 48px;
+
+        line-height: 58px;
+
+    }
+
+    .navbar {
+
+        padding: 0 25px;
+
+    }
+
+    nav {
+
+        display: none;
+
+    }
+
+    section {
+
+        padding: 80px 8%;
 
     }
 
@@ -852,12 +837,6 @@ footer a {
 
     }
 
-    .hero h1 {
-
-        font-size: 48px;
-
-    }
-
     .hero h2 {
 
         font-size: 28px;
@@ -873,5 +852,7 @@ footer a {
         text-align: center;
 
     }
+
+
 
 }
