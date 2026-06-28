@@ -1,35 +1,481 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Movixa - Gestão Inteligente</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; line-height: 1.6; color: #333; }
-        .lang-selector { margin-top: 10px; font-size: 0.9em; }
-        .logo { width: 200px; margin-top: 30px; }
-        section { padding: 40px; max-width: 600px; margin: auto; }
-        footer { background: #f4f4f4; padding: 20px; margin-top: 50px; }
-    </style>
-</head>
-<body>
-    <div class="lang-selector">
-        <a href="index.html">Português</a> | <a href="index_en.html">English</a>
-    </div>
+<html lang="pt-BR">
 
-    <img src="icone.png" alt="Logo Movixa" class="logo">
-    
-    <section>
-        <h1>Movixa</h1>
-        <p>O Movixa é a solução definitiva para empreendedores que buscam agilidade e organização no ponto de venda. Desenvolvido para facilitar a rotina de bares, lanchonetes e microempresas, nosso sistema permite que você gerencie pedidos, produtos e clientes com total facilidade, mesmo em momentos em que não houver conexão com a internet disponível.</p>
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Movixa Software | Desenvolvimento de Software</title>
+
+    <meta name="description"
+        content="Movixa Software desenvolve soluções para empresas, varejo e eventos. Conheça o Movixa PDV & Gestão de Negócios e o Evento360.">
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <!-- ========================= -->
+    <!-- NAVBAR                    -->
+    <!-- ========================= -->
+
+    <header class="navbar">
+
+        <div class="logo">
+
+            <img src="icone.png" alt="Movixa Software">
+
+            <span>Movixa Software</span>
+
+        </div>
+
+        <nav>
+
+            <a href="#home">
+                <span class="pt">Home</span>
+                <span class="en">Home</span>
+            </a>
+
+            <a href="#about">
+                <span class="pt">Empresa</span>
+                <span class="en">Company</span>
+            </a>
+
+            <a href="#products">
+                <span class="pt">Produtos</span>
+                <span class="en">Products</span>
+            </a>
+
+            <a href="#contact">
+                <span class="pt">Contato</span>
+                <span class="en">Contact</span>
+            </a>
+
+        </nav>
+
+        <div class="language">
+
+            <button data-lang="pt" onclick="setLanguage('pt')">
+
+                🇧🇷 PT
+
+            </button>
+
+            <button data-lang="en" onclick="setLanguage('en')">
+
+                🇺🇸 EN
+
+            </button>
+
+        </div>
+
+    </header>
+
+    <!-- ========================= -->
+    <!-- HERO                      -->
+    <!-- ========================= -->
+
+    <section class="hero" id="home">
+
+        <div class="hero-text">
+
+            <h1>
+
+                Movixa Software
+
+            </h1>
+
+            <p class="pt">
+
+                Desenvolvemos soluções inteligentes para empresas,
+                varejo e eventos.
+
+            </p>
+
+            <p class="en">
+
+                We build intelligent software solutions for
+                businesses, retail and events.
+
+            </p>
+
+            <a href="#products" class="primaryButton">
+
+                <span class="pt">Conheça nossos produtos</span>
+
+                <span class="en">Explore our products</span>
+
+            </a>
+
+        </div>
+
+        <div class="hero-image">
+
+            <img src="mockup.png" alt="Movixa Software">
+
+        </div>
+
     </section>
 
+    <!-- ========================= -->
+    <!-- ABOUT                     -->
+    <!-- ========================= -->
+
+    <section class="about" id="about">
+
+        <h2>
+
+            <span class="pt">Quem Somos</span>
+
+            <span class="en">About Us</span>
+
+        </h2>
+
+        <p class="pt">
+
+            A Movixa Software desenvolve soluções modernas para gestão
+            empresarial e gerenciamento de eventos.
+
+            Nosso objetivo é simplificar operações comerciais através
+            de aplicativos rápidos, intuitivos e seguros.
+
+        </p>
+
+        <p class="en">
+
+            Movixa Software develops modern software solutions for
+            business management and event operations.
+
+            Our mission is to simplify business processes through
+            fast, intuitive and reliable applications.
+
+        </p>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- PRODUCTS                  -->
+    <!-- ========================= -->
+
+    <section id="products">
+
+        <h2>
+
+            <span class="pt">Nossos Produtos</span>
+
+            <span class="en">Our Products</span>
+
+        </h2>
+
+        <div class="cards">
+
+            <!-- MOVIXA -->
+
+            <div class="card">
+
+                <h3>
+
+                    Movixa
+
+                </h3>
+
+                <h4>
+
+                    PDV & Gestão de Negócios
+
+                </h4>
+
+                <p class="pt">
+
+                    Controle vendas, estoque, clientes,
+                    financeiro e relatórios em um único sistema.
+
+                </p>
+
+                <p class="en">
+
+                    Manage sales, inventory,
+                    customers and finances in one platform.
+
+                </p>
+
+                <ul>
+
+                    <li>✔ PDV</li>
+
+                    <li>✔ Estoque</li>
+
+                    <li>✔ Financeiro</li>
+
+                    <li>✔ Clientes</li>
+
+                    <li>✔ Offline First</li>
+
+                </ul>
+
+                <a href="movixa.html">
+
+                    <span class="pt">Saiba mais</span>
+
+                    <span class="en">Learn More</span>
+
+                </a>
+
+            </div>
+
+            <!-- EVENTO360 -->
+
+            <div class="card">
+
+                <h3>
+
+                    Evento360
+
+                </h3>
+
+                <h4>
+
+                    Tickets, Bar & Cozinha
+
+                </h4>
+
+                <p class="pt">
+
+                    Venda de ingressos,
+                    controle de acesso,
+                    comandas, cozinha e estoque.
+
+                </p>
+
+                <p class="en">
+
+                    Ticket sales,
+                    access control,
+                    kitchen, bar and inventory.
+
+                </p>
+
+                <ul>
+
+                    <li>✔ Tickets</li>
+
+                    <li>✔ QR Code</li>
+
+                    <li>✔ Bar</li>
+
+                    <li>✔ Cozinha</li>
+
+                    <li>✔ Estoque</li>
+
+                </ul>
+
+                <a href="evento360.html">
+
+                    <span class="pt">Saiba mais</span>
+
+                    <span class="en">Learn More</span>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- TECHNOLOGIES              -->
+    <!-- ========================= -->
+
+    <section class="technologies">
+
+        <h2>
+
+            <span class="pt">
+
+                Tecnologias
+
+            </span>
+
+            <span class="en">
+
+                Technologies
+
+            </span>
+
+        </h2>
+
+        <div class="techGrid">
+
+            <div>React Native</div>
+
+            <div>Firebase</div>
+
+            <div>Cloud Functions</div>
+
+            <div>Expo</div>
+
+            <div>SQLite</div>
+
+            <div>Apple</div>
+
+            <div>Android</div>
+
+        </div>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- DIFFERENTIALS             -->
+    <!-- ========================= -->
+
+    <section class="advantages">
+
+        <h2>
+
+            <span class="pt">
+
+                Diferenciais
+
+            </span>
+
+            <span class="en">
+
+                Why Choose Us
+
+            </span>
+
+        </h2>
+
+        <div class="cards">
+
+            <div class="advantage">
+
+                <h3>Offline First</h3>
+
+                <p>
+
+                    <span class="pt">
+
+                        Continue trabalhando mesmo sem internet.
+
+                    </span>
+
+                    <span class="en">
+
+                        Keep working even without internet.
+
+                    </span>
+
+                </p>
+
+            </div>
+
+            <div class="advantage">
+
+                <h3>Cloud Sync</h3>
+
+                <p>
+
+                    Sincronização segura em nuvem.
+
+                </p>
+
+            </div>
+
+            <div class="advantage">
+
+                <h3>Security</h3>
+
+                <p>
+
+                    Firebase Authentication &
+                    Cloud Firestore.
+
+                </p>
+
+            </div>
+
+            <div class="advantage">
+
+                <h3>Performance</h3>
+
+                <p>
+
+                    Aplicações rápidas e responsivas.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- CONTACT                   -->
+    <!-- ========================= -->
+
+    <section id="contact">
+
+        <h2>
+
+            <span class="pt">
+
+                Contato
+
+            </span>
+
+            <span class="en">
+
+                Contact
+
+            </span>
+
+        </h2>
+
+        <p>
+
+            priscila.contato@live.com
+
+        </p>
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- FOOTER                    -->
+    <!-- ========================= -->
+
     <footer>
-        <h2>Suporte</h2>
-        <p>Precisa de ajuda? Entre em contato conosco:</p>
-        <p><strong>Email:</strong> priscila.contato@live.com</p>
-        <br>
-        <a href="politica.html">Ver Política de Privacidade</a>
-        <a href="termos.html">Ver Termos de Uso</a>
+
+        <div>
+
+            © 2026 Movixa Software
+
+        </div>
+
+        <div>
+
+            <a href="movixa.html">
+
+                Movixa
+
+            </a>
+
+            <a href="evento360.html">
+
+                Evento360
+
+            </a>
+
+        </div>
+
     </footer>
+
+    <script src="language.js"></script>
+
 </body>
+
 </html>
