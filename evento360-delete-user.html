@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Excluir conta - Bar e Bilheteria</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #666;
+            color: #000;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .bkg {
+            width: 100%;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #666;
+        }
+
+        .logo {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .form {
+            width: 100%;
+            padding: 25px;
+            border-radius: 5px;
+            background: #F5F5F5;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .descricao {
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .txt {
+            width: 100%;
+            padding: 10px 16px;
+            margin-bottom: 15px;
+
+            color: #000;
+            background: #FFF;
+
+            border: 1px solid #E2E8F0;
+            border-radius: 5px;
+
+            font-size: 16px;
+            outline: none;
+        }
+
+        .txt:focus {
+            border-color: #aaa;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+
+            border: none;
+            border-radius: 25px;
+
+            background: #FFD400;
+            color: #FFFFFF;
+
+            font-size: 16px;
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btnExcluir {
+            background: #d32f2f;
+        }
+
+        .mensagem {
+            display: none;
+
+            margin-top: 15px;
+            padding: 12px;
+
+            border-radius: 6px;
+
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .erro {
+            display: block;
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .sucesso {
+            display: block;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .confirmacao {
+            display: none;
+        }
+
+        .aviso {
+            margin-top: 20px;
+            padding: 15px;
+
+            border-radius: 6px;
+
+            background: #fff3cd;
+            color: #664d03;
+
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .workspaceNome {
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <div class="bkg">
+
+        <!--
+            Se quiser colocar a mesma logo do aplicativo,
+            substitua pelo endereço da sua imagem.
+        -->
+
+    </div>
+
+
+    <div class="form">
+
+
+        <!-- =====================================================
+             LOGIN
+        ====================================================== -->
+
+        <div id="areaLogin">
+
+            <h1>
+                Excluir conta
+            </h1>
+
+
+            <p class="descricao">
+
+                Para excluir sua conta e seu workspace,
+                informe os mesmos dados utilizados para
+                acessar o aplicativo.
+
+            </p>
+
+
+            <input
+                type="text"
+                id="workspace"
+                class="txt"
+                placeholder="Digite o seu workspace"
+                autocomplete="organization"
+                autocapitalize="none"
+                spellcheck="false"
+            >
+
+
+            <input
+                type="email"
+                id="email"
+                class="txt"
+                placeholder="Digite o seu email"
+                autocomplete="email"
+                autocapitalize="none"
+                spellcheck="false"
+            >
+
+
+            <input
+                type="password"
+                id="password"
+                class="txt"
+                placeholder="Digite a sua senha"
+                autocomplete="current-password"
+            >
+
+
+            <button
+                id="btnLogin"
+                class="btn"
+                type="button"
+            >
+                Entrar
+            </button>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             CONFIRMAÇÃO
+        ====================================================== -->
+
+        <div
+            id="areaConfirmacao"
+            class="confirmacao"
+        >
+
+            <h1>
+                Excluir workspace
+            </h1>
+
+
+            <p class="descricao">
+
+                Você está prestes a excluir permanentemente
+                o workspace:
+
+                <br><br>
+
+                <span
+                    id="workspaceNome"
+                    class="workspaceNome"
+                ></span>
+
+                <br><br>
+
+                A exclusão removerá o workspace, os dados
+                armazenados nele e as contas dos usuários
+                associados a ele.
+
+                <br><br>
+
+                <strong>
+                    Essa ação não poderá ser desfeita.
+                </strong>
+
+            </p>
+
+
+            <button
+                id="btnExcluir"
+                class="btn btnExcluir"
+                type="button"
+            >
+                Excluir permanentemente
+            </button>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             MENSAGEM
+        ====================================================== -->
+
+        <div
+            id="mensagem"
+            class="mensagem"
+        ></div>
+
+
+
+        <!-- =====================================================
+             AVISO
+        ====================================================== -->
+
+        <div class="aviso">
+
+            <strong>Atenção:</strong>
+
+            somente usuários cuja função seja
+            <strong>Gerente</strong> poderão excluir
+            um workspace.
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<script type="module">
+
+
+    // =========================================================
+    // FIREBASE APP
+    // =========================================================
+
+    import {
+        initializeApp
+    } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+
+
+    // =========================================================
+    // FIREBASE AUTHENTICATION
+    // =========================================================
+
+    import {
+        getAuth,
+        signInWithEmailAndPassword,
+        signOut
+    } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+
+    // =========================================================
+    // FIRESTORE
+    // =========================================================
+
+    import {
+        getFirestore,
+        doc,
+        getDoc
+    } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+
+    // =========================================================
+    // CLOUD FUNCTIONS
+    // =========================================================
+
+    import {
+        getFunctions,
+        httpsCallable
+    } from
+        "https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js";
+
+
+
+    // =========================================================
+    // CONFIGURAÇÃO DO FIREBASE
+    // =========================================================
+
+    const firebaseConfig = {
+
+        apiKey:
+            "AIzaSyAtxKBNFb700TssBLWuy5Peq5pSfbdeXsA",
+
+        authDomain:
+            "barebilheteria.firebaseapp.com",
+
+        projectId:
+            "barebilheteria",
+
+        storageBucket:
+            "barebilheteria.firebasestorage.app",
+
+        messagingSenderId:
+            "68126613293",
+
+        appId:
+            "1:68126613293:web:a1691b0fa4e50856097da4"
+
+    };
+
+
+
+    // =========================================================
+    // INICIALIZAÇÃO
+    // =========================================================
+
+    const app =
+        initializeApp(firebaseConfig);
+
+
+    const auth =
+        getAuth(app);
+
+
+    const db =
+        getFirestore(app);
+
+
+    const functions =
+        getFunctions(
+            app,
+            "southamerica-east1"
+        );
+
+
+
+    // =========================================================
+    // ELEMENTOS DA PÁGINA
+    // =========================================================
+
+    const areaLogin =
+        document.getElementById(
+            "areaLogin"
+        );
+
+
+    const areaConfirmacao =
+        document.getElementById(
+            "areaConfirmacao"
+        );
+
+
+    const workspaceInput =
+        document.getElementById(
+            "workspace"
+        );
+
+
+    const emailInput =
+        document.getElementById(
+            "email"
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            "password"
+        );
+
+
+    const btnLogin =
+        document.getElementById(
+            "btnLogin"
+        );
+
+
+    const btnExcluir =
+        document.getElementById(
+            "btnExcluir"
+        );
+
+
+    const workspaceNome =
+        document.getElementById(
+            "workspaceNome"
+        );
+
+
+    const mensagem =
+        document.getElementById(
+            "mensagem"
+        );
+
+
+
+    // =========================================================
+    // MOSTRAR MENSAGEM
+    // =========================================================
+
+    function mostrarMensagem(
+        texto,
+        tipo
+    ) {
+
+        mensagem.textContent =
+            texto;
+
+        mensagem.className =
+            "mensagem " + tipo;
+
+    }
+
+
+
+    // =========================================================
+    // LIMPAR MENSAGEM
+    // =========================================================
+
+    function limparMensagem() {
+
+        mensagem.textContent =
+            "";
+
+        mensagem.className =
+            "mensagem";
+
+    }
+
+
+
+    // =========================================================
+    // CONTROLE DO BOTÃO DE LOGIN
+    // =========================================================
+
+    function setCarregando(
+        carregando
+    ) {
+
+        btnLogin.disabled =
+            carregando;
+
+        btnLogin.textContent =
+            carregando
+                ? "Carregando..."
+                : "Entrar";
+
+    }
+
+
+
+    // =========================================================
+    // LOGIN
+    //
+    // MESMO FLUXO DO LOGIN DO APLICATIVO
+    // =========================================================
+
+    async function login() {
+
+        setCarregando(true);
+
+        limparMensagem();
+
+
+        const workspace =
+            workspaceInput.value.trim();
+
+
+        const email =
+            emailInput.value.trim();
+
+
+        const password =
+            passwordInput.value;
+
+
+
+        // =====================================================
+        // 1. VERIFICA CAMPOS
+        // =====================================================
+
+        if (
+            !workspace ||
+            !email ||
+            !password
+        ) {
+
+            mostrarMensagem(
+                "Preencha todos os campos.",
+                "erro"
+            );
+
+            setCarregando(false);
+
+            return;
+        }
+
+
+
+        try {
+
+
+            // =================================================
+            // 2. LOGIN NO FIREBASE AUTHENTICATION
+            // =================================================
+
+            const userCredential =
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
+
+
+
+            // =================================================
+            // 3. NORMALIZA O WORKSPACE
+            //
+            // MESMA REGRA DO APLICATIVO
+            // =================================================
+
+            const workspacelimpo =
+                workspace
+                    .replace(/\s+/g, '')
+                    .toLowerCase();
+
+
+
+            // =================================================
+            // 4. VERIFICA SE O WORKSPACE EXISTE
+            // =================================================
+
+            const workspaceRef =
+                doc(
+                    db,
+                    "workspaces",
+                    workspacelimpo
+                );
+
+
+            const workspaceSnap =
+                await getDoc(
+                    workspaceRef
+                );
+
+
+
+            if (
+                !workspaceSnap.exists()
+            ) {
+
+                await signOut(auth);
+
+                mostrarMensagem(
+                    "Workspace não encontrado.",
+                    "erro"
+                );
+
+                return;
+            }
+
+
+
+            // =================================================
+            // 5. VERIFICA O USUÁRIO
+            //
+            // workspaces
+            //   -> workspace
+            //      -> USUARIOS
+            //         -> UID
+            // =================================================
+
+            const usuarioRef =
+                doc(
+                    db,
+                    "workspaces",
+                    workspacelimpo,
+                    "USUARIOS",
+                    userCredential.user.uid
+                );
+
+
+            const usuarioSnap =
+                await getDoc(
+                    usuarioRef
+                );
+
+
+
+            // =================================================
+            // 6. USUÁRIO NÃO PERTENCE AO WORKSPACE
+            // =================================================
+
+            if (
+                !usuarioSnap.exists()
+            ) {
+
+                await signOut(auth);
+
+                mostrarMensagem(
+                    "Você não tem acesso a esse workspace.",
+                    "erro"
+                );
+
+                return;
+            }
+
+
+
+            // =================================================
+            // 7. DADOS DO USUÁRIO
+            // =================================================
+
+            const dadosUsuario =
+                usuarioSnap.data();
+
+
+
+            // =================================================
+            // 8. VERIFICA SE É GERENTE
+            // =================================================
+
+            if (
+                dadosUsuario.FUNCAO !== "Gerente"
+            ) {
+
+                await signOut(auth);
+
+                mostrarMensagem(
+                    "Somente usuários do tipo Gerente podem excluir um workspace.",
+                    "erro"
+                );
+
+                return;
+            }
+
+
+
+            // =================================================
+            // 9. LOGIN E AUTORIZAÇÃO OK
+            // =================================================
+
+            workspaceNome.textContent =
+                workspacelimpo;
+
+
+            areaLogin.style.display =
+                "none";
+
+
+            areaConfirmacao.style.display =
+                "block";
+
+
+        } catch (error) {
+
+            console.error(
+                "Erro no login:",
+                error
+            );
+
+
+            mostrarMensagem(
+                "E-mail ou senha incorretos.",
+                "erro"
+            );
+
+
+            try {
+
+                await signOut(auth);
+
+            } catch (signOutError) {
+
+                console.error(
+                    "Erro ao sair:",
+                    signOutError
+                );
+
+            }
+
+        } finally {
+
+            setCarregando(false);
+
+        }
+
+    }
+
+
+
+    // =========================================================
+    // EXCLUSÃO DO WORKSPACE
+    // =========================================================
+
+    async function excluirWorkspace() {
+
+        limparMensagem();
+
+
+        const usuario =
+            auth.currentUser;
+
+
+
+        // =====================================================
+        // VERIFICA SE A SESSÃO EXISTE
+        // =====================================================
+
+        if (!usuario) {
+
+            mostrarMensagem(
+                "Sua sessão expirou. Faça o login novamente.",
+                "erro"
+            );
+
+
+            areaConfirmacao.style.display =
+                "none";
+
+
+            areaLogin.style.display =
+                "block";
+
+
+            return;
+        }
+
+
+
+        // =====================================================
+        // CONFIRMAÇÃO FINAL
+        // =====================================================
+
+        const confirmar =
+            window.confirm(
+                "Tem certeza que deseja excluir permanentemente este workspace e todas as contas associadas?\n\n" +
+                "Essa ação não poderá ser desfeita."
+            );
+
+
+        if (!confirmar) {
+            return;
+        }
+
+
+
+        btnExcluir.disabled =
+            true;
+
+
+        btnExcluir.textContent =
+            "Excluindo...";
+
+
+
+        try {
+
+
+            // =================================================
+            // CHAMA A CLOUD FUNCTION
+            // =================================================
+
+            const excluirWorkspaceExterno =
+                httpsCallable(
+                    functions,
+                    "excluirWorkspaceExterno"
+                );
+
+
+            await excluirWorkspaceExterno({
+
+                workspace:
+                    workspaceInput.value
+                        .replace(/\s+/g, '')
+                        .toLowerCase()
+
+            });
+
+
+
+            // =================================================
+            // SUCESSO
+            // =================================================
+
+            areaConfirmacao.style.display =
+                "none";
+
+
+            document.querySelector(
+                ".aviso"
+            ).style.display =
+                "none";
+
+
+            mostrarMensagem(
+                "Sua conta e seu workspace foram excluídos com sucesso.",
+                "sucesso"
+            );
+
+
+            // =================================================
+            // ENCERRA A SESSÃO LOCAL
+            // =================================================
+
+            await signOut(auth);
+
+
+
+        } catch (error) {
+
+            console.error(
+                "Erro ao excluir workspace:",
+                error
+            );
+
+
+            let texto =
+                "Não foi possível excluir o workspace.";
+
+
+
+            if (
+                error?.code ===
+                "functions/permission-denied"
+            ) {
+
+                texto =
+                    "Você não tem permissão para excluir este workspace.";
+
+            }
+
+
+            else if (
+                error?.code ===
+                "functions/not-found"
+            ) {
+
+                texto =
+                    "Workspace não encontrado.";
+
+            }
+
+
+            else if (
+                error?.code ===
+                "functions/unauthenticated"
+            ) {
+
+                texto =
+                    "Sua sessão expirou. Faça o login novamente.";
+
+            }
+
+
+            else if (
+                error?.code ===
+                "functions/invalid-argument"
+            ) {
+
+                texto =
+                    "Workspace não informado.";
+
+            }
+
+
+
+            mostrarMensagem(
+                texto,
+                "erro"
+            );
+
+
+            btnExcluir.disabled =
+                false;
+
+
+            btnExcluir.textContent =
+                "Excluir permanentemente";
+
+        }
+
+    }
+
+
+
+    // =========================================================
+    // EVENTOS
+    // =========================================================
+
+    btnLogin.addEventListener(
+        "click",
+        login
+    );
+
+
+    btnExcluir.addEventListener(
+        "click",
+        excluirWorkspace
+    );
+
+
+
+    // =========================================================
+    // ENTER NOS CAMPOS
+    // =========================================================
+
+    [
+        workspaceInput,
+        emailInput,
+        passwordInput
+
+    ].forEach(
+        (campo) => {
+
+            campo.addEventListener(
+                "keydown",
+                (event) => {
+
+                    if (
+                        event.key === "Enter"
+                    ) {
+
+                        login();
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>
