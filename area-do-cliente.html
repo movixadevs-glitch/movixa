@@ -223,7 +223,23 @@ forgotButton.addEventListener("click",async()=>{
   catch(error){console.error(error);showFeedback(loginFeedback,"Não foi possível enviar o link de recuperação. Verifique o e-mail informado.");}
 });
 logoutButton.addEventListener("click",()=>auth.signOut());
-refreshButton.addEventListener("click",()=>{if(auth.currentUser)carregarIngressos(auth.currentUser);});
+  refreshButton.addEventListener("click", async () => {
+  if (!auth.currentUser) {
+    return;
+  }
+
+  refreshButton.disabled = true;
+  refreshButton.textContent = "Atualizando...";
+
+  try {
+    await carregarIngressos(auth.currentUser);
+  } catch (error) {
+    console.error("[CLIENTE] Erro ao atualizar ingressos:", error);
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.textContent = "Atualizar";
+  }
+});
 auth.onAuthStateChanged(user=>{
   if(user){
     loginCard.classList.add("hidden");area.classList.remove("hidden");headerRight.classList.remove("hidden");headerEmail.textContent=user.email||"";carregarIngressos(user);
