@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento360 | Venda de Ingressos</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/icone.png">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,#f7f7f7,#ededed);color:#171717}
+.header{background:#111;padding:18px}
+.brand{width:min(100%,560px);margin:auto;display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;font-size:22px;font-weight:800}
+.mark{width:36px;height:36px;border-radius:9px;background:#FFD400;color:#111;display:flex;align-items:center;justify-content:center;font-size:14px}
+main{padding:35px 15px}
+.card{width:min(100%,560px);margin:auto;background:#fff;border-radius:22px;padding:30px 25px;box-shadow:0 10px 35px rgba(0,0,0,.08)}
+.loading{text-align:center;padding:45px 10px}
+.spinner{width:42px;height:42px;margin:0 auto 18px;border:4px solid #eee;border-top-color:#FFD400;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.label{text-align:center;color:#777;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+h1{text-align:center;font-size:clamp(25px,7vw,34px);line-height:1.15;margin:10px 0;font-weight:800}
+.divider{width:55px;height:4px;margin:22px auto;background:#FFD400;border-radius:10px}
+.price{text-align:center;font-size:34px;font-weight:800;margin-bottom:8px}
+.price-label{text-align:center;color:#777;font-size:14px}
+.availability{text-align:center;margin:22px 0;padding:11px;border-radius:10px;background:#f6f6f6;color:#555;font-size:14px;font-weight:600}
+.field-label{display:block;margin-bottom:9px;font-weight:700}
+.quantity{display:flex;align-items:center;border:1px solid #ddd;border-radius:12px;overflow:hidden;margin-bottom:20px}
+.quantity button{width:54px;height:54px;border:0;background:#f4f4f4;font-size:25px;font-weight:700;cursor:pointer}
+.quantity button:disabled{opacity:.4;cursor:not-allowed}
+.quantity-value{flex:1;text-align:center;font-size:20px;font-weight:700}
+.total{display:flex;justify-content:space-between;padding:15px 16px;margin-bottom:20px;border-radius:12px;background:#fafafa}
+.total-value{font-weight:800;font-size:21px}
+.buy{width:100%;border:0;border-radius:13px;padding:17px;background:#FFD400;color:#111;font-size:17px;font-weight:800;cursor:pointer}
+.buy:disabled{opacity:.55;cursor:not-allowed}
+.payment{text-align:center;color:#777;font-size:12px;line-height:1.5;margin-top:15px}
+.message{text-align:center;padding:30px 10px}
+.message-icon{width:58px;height:58px;margin:auto auto 18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:26px}
+.message h2{margin:0 0 10px}
+.message p{margin:0;color:#666;line-height:1.5}
+footer{text-align:center;color:#888;font-size:12px;padding:20px}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="mark">360</div>
+        <span>Evento360</span>
+    </div>
+</header>
+
+<main>
+    <section class="card">
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div>Carregando evento...</div>
+        </div>
+
+        <div id="error" class="message hidden">
+            <div class="message-icon">!</div>
+            <h2>Evento indisponível</h2>
+            <p id="errorText">Não foi possível carregar este evento.</p>
+        </div>
+
+        <div id="soldOut" class="message hidden">
+            <div class="message-icon">!</div>
+            <h2>Ingressos esgotados</h2>
+            <p>No momento não há ingressos disponíveis para este evento.</p>
+        </div>
+
+        <div id="content" class="hidden">
+            <div class="label">Evento</div>
+            <h1 id="eventName">Evento</h1>
+            <div class="divider"></div>
+
+            <div class="price-label">Ingresso</div>
+            <div id="price" class="price">R$ 0,00</div>
+
+            <div id="availability" class="availability">
+                Ingressos disponíveis
+            </div>
+
+            <label class="field-label">Quantidade</label>
+
+            <div class="quantity">
+                <button id="decrease" type="button">−</button>
+                <div id="quantity" class="quantity-value">1</div>
+                <button id="increase" type="button">+</button>
+            </div>
+
+            <div class="total">
+                <span>Total</span>
+                <span id="total" class="total-value">R$ 0,00</span>
+            </div>
+
+            <button id="buy" class="buy" type="button">
+                Comprar ingresso
+            </button>
+
+            <div class="payment">
+                Você será direcionado para o ambiente seguro do PagBank
+                para concluir o pagamento.
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<footer>
+    Venda online pelo Evento360 · Movixa Software
+</footer>
+
+<script>
+const API_EVENTO =
+    "https://southamerica-east1-barebilheteria.cloudfunctions.net/dadosVendaOnline";
+
+const API_CHECKOUT =
+    "https://southamerica-east1-barebilheteria.cloudfunctions.net/criarCheckoutVendaPublico";
+
+const params = new URLSearchParams(window.location.search);
+const workspace = params.get("workspace");
+const eventoId = params.get("evento");
+
+let preco = 0;
+let quantidade = 1;
+let maxQuantidade = 1;
+
+const loading = document.getElementById("loading");
+const error = document.getElementById("error");
+const errorText = document.getElementById("errorText");
+const soldOut = document.getElementById("soldOut");
+const content = document.getElementById("content");
+const eventName = document.getElementById("eventName");
+const price = document.getElementById("price");
+const availability = document.getElementById("availability");
+const quantity = document.getElementById("quantity");
+const total = document.getElementById("total");
+const decrease = document.getElementById("decrease");
+const increase = document.getElementById("increase");
+const buy = document.getElementById("buy");
+
+function moeda(valor) {
+    return Number(valor).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+    });
+}
+
+function erro(mensagem) {
+    loading.classList.add("hidden");
+    content.classList.add("hidden");
+    soldOut.classList.add("hidden");
+    errorText.textContent = mensagem;
+    error.classList.remove("hidden");
+}
+
+function atualizar() {
+    quantity.textContent = quantidade;
+    total.textContent = moeda(preco * quantidade);
+    decrease.disabled = quantidade <= 1;
+    increase.disabled = quantidade >= maxQuantidade;
+}
+
+async function carregarEvento() {
+    if (!workspace || !eventoId) {
+        erro("O link do evento é inválido.");
+        return;
+    }
+
+    try {
+        const resposta = await fetch(
+            API_EVENTO +
+            "?workspace=" + encodeURIComponent(workspace) +
+            "&evento=" + encodeURIComponent(eventoId)
+        );
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || !dados.sucesso) {
+            throw new Error(
+                dados.mensagem || "Não foi possível carregar o evento."
+            );
+        }
+
+        preco = Number(dados.preco || 0);
+        const disponiveis = Number(dados.disponiveis || 0);
+
+        eventName.textContent = dados.nome || "Evento";
+        price.textContent = moeda(preco);
+
+        availability.textContent =
+            dados.limite > 0
+                ? disponiveis + " ingresso(s) disponível(is)"
+                : "Ingressos disponíveis";
+
+        if (dados.limite > 0 && disponiveis <= 0) {
+            loading.classList.add("hidden");
+            soldOut.classList.remove("hidden");
+            return;
+        }
+
+        maxQuantidade = dados.limite > 0
+            ? Math.min(disponiveis, 10)
+            : 10;
+
+        quantidade = 1;
+        atualizar();
+
+        loading.classList.add("hidden");
+        content.classList.remove("hidden");
+
+    } catch (e) {
+        console.error("[EVENTO360]", e);
+        erro(e.message || "Não foi possível carregar o evento.");
+    }
+}
+
+decrease.addEventListener("click", function () {
+    if (quantidade > 1) {
+        quantidade--;
+        atualizar();
+    }
+});
+
+increase.addEventListener("click", function () {
+    if (quantidade < maxQuantidade) {
+        quantidade++;
+        atualizar();
+    }
+});
+
+buy.addEventListener("click", async function () {
+    buy.disabled = true;
+    buy.textContent = "Preparando pagamento...";
+
+    try {
+        const resposta = await fetch(API_CHECKOUT, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                workspace,
+                eventoId,
+                quantidade
+            })
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok || !dados.sucesso || !dados.linkPagamento) {
+            throw new Error(
+                dados.mensagem ||
+                "Não foi possível iniciar o pagamento."
+            );
+        }
+
+        window.location.href = dados.linkPagamento;
+
+    } catch (e) {
+        console.error("[EVENTO360] Pagamento:", e);
+
+        alert(
+            e.message ||
+            "Não foi possível iniciar o pagamento."
+        );
+
+        buy.disabled = false;
+        buy.textContent = "Comprar ingresso";
+    }
+});
+
+carregarEvento();
+</script>
+
+</body>
+</html>
