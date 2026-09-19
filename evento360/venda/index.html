@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento360 | Venda de Ingressos</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/icone.png">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,#f7f7f7,#ededed);color:#171717}
+.header{background:#111;padding:18px}
+.brand{width:min(100%,560px);margin:auto;display:flex;align-items:center;justify-content:center;gap:10px;color:#fff;font-size:22px;font-weight:800}
+.mark{width:36px;height:36px;border-radius:9px;background:#FFD400;color:#111;display:flex;align-items:center;justify-content:center;font-size:14px}
+main{padding:35px 15px}
+.card{width:min(100%,560px);margin:auto;background:#fff;border-radius:22px;padding:30px 25px;box-shadow:0 10px 35px rgba(0,0,0,.08)}
+.loading{text-align:center;padding:45px 10px}
+.spinner{width:42px;height:42px;margin:0 auto 18px;border:4px solid #eee;border-top-color:#FFD400;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+.label{text-align:center;color:#777;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+h1{text-align:center;font-size:clamp(25px,7vw,34px);line-height:1.15;margin:10px 0;font-weight:800}
+.divider{width:55px;height:4px;margin:22px auto;background:#FFD400;border-radius:10px}
+.price{text-align:center;font-size:34px;font-weight:800;margin-bottom:8px}
+.price-label{text-align:center;color:#777;font-size:14px}
+.availability{text-align:center;margin:22px 0;padding:11px;border-radius:10px;background:#f6f6f6;color:#555;font-size:14px;font-weight:600}
+.field-label{display:block;margin-bottom:9px;font-weight:700}
+.quantity{display:flex;align-items:center;border:1px solid #ddd;border-radius:12px;overflow:hidden;margin-bottom:20px}
+.quantity button{width:54px;height:54px;border:0;background:#f4f4f4;font-size:25px;font-weight:700;cursor:pointer}
+.quantity button:disabled{opacity:.4;cursor:not-allowed}
+.quantity-value{flex:1;text-align:center;font-size:20px;font-weight:700}
+.total{display:flex;justify-content:space-between;padding:15px 16px;margin-bottom:20px;border-radius:12px;background:#fafafa}
+.total-value{font-weight:800;font-size:21px}
+.buy{width:100%;border:0;border-radius:13px;padding:17px;background:#FFD400;color:#111;font-size:17px;font-weight:800;cursor:pointer}
+.buy:disabled{opacity:.55;cursor:not-allowed}
+.payment{text-align:center;color:#777;font-size:12px;line-height:1.5;margin-top:15px}
+.message{text-align:center;padding:30px 10px}
+.message-icon{width:58px;height:58px;margin:auto auto 18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:26px}
+.message h2{margin:0 0 10px}
+.message p{margin:0;color:#666;line-height:1.5}
+footer{text-align:center;color:#888;font-size:12px;padding:20px}
+
+.login-panel{margin-top:25px}
+.login-title{text-align:center;font-size:24px;font-weight:800;margin:0 0 8px}
+.login-subtitle{text-align:center;color:#777;font-size:14px;line-height:1.5;margin:0 0 22px}
+.auth-mode{display:flex;background:#f4f4f4;border-radius:12px;padding:4px;margin-bottom:20px}
+.auth-mode button{flex:1;border:0;background:transparent;border-radius:9px;padding:11px 8px;font-weight:700;color:#666;cursor:pointer}
+.auth-mode button.active{background:#fff;color:#111;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.auth-field{margin-bottom:15px}
+.auth-field label{display:block;font-size:13px;font-weight:700;margin-bottom:8px}
+.auth-field input{width:100%;height:50px;border:1px solid #ddd;border-radius:11px;padding:0 14px;font-size:16px;outline:none}
+.auth-field input:focus{border-color:#FFD400;box-shadow:0 0 0 3px rgba(255,212,0,.18)}
+.auth-button{width:100%;border:0;border-radius:13px;padding:15px;background:#FFD400;color:#111;font-size:16px;font-weight:800;cursor:pointer}
+.auth-button:disabled{opacity:.55;cursor:not-allowed}
+.auth-secondary{width:100%;border:0;background:transparent;padding:12px;margin-top:7px;color:#666;font-size:13px;cursor:pointer}
+.auth-feedback{text-align:center;padding:12px;border-radius:10px;background:#f7f7f7;color:#555;font-size:13px;line-height:1.5;margin-bottom:15px}
+.auth-feedback.success{background:#f3f8e8;color:#526b24}
+.auth-feedback.error{background:#fff1f1;color:#a33}
+.back-button{border:0;background:transparent;color:#666;font-weight:700;padding:5px 0 15px;cursor:pointer}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="mark">360</div>
+        <span>Evento360</span>
+    </div>
+</header>
+
+<main>
+    <section class="card">
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div>Carregando evento...</div>
+        </div>
+
+        <div id="error" class="message hidden">
+            <div class="message-icon">!</div>
+            <h2>Evento indisponível</h2>
+            <p id="errorText">Não foi possível carregar este evento.</p>
+        </div>
+
+        <div id="soldOut" class="message hidden">
+            <div class="message-icon">!</div>
+            <h2>Ingressos esgotados</h2>
+            <p>No momento não há ingressos disponíveis para este evento.</p>
+        </div>
+
+        <div id="content" class="hidden">
+            <div class="label">Evento</div>
+            <h1 id="eventName">Evento</h1>
+            <div class="divider"></div>
+
+            <div class="price-label">Ingresso</div>
+            <div id="price" class="price">R$ 0,00</div>
+
+            <div id="availability" class="availability">
+                Ingressos disponíveis
+            </div>
+
+            <label class="field-label">Quantidade</label>
+
+            <div class="quantity">
+                <button id="decrease" type="button">−</button>
+                <div id="quantity" class="quantity-value">1</div>
+                <button id="increase" type="button">+</button>
+            </div>
+
+            <div class="total">
+                <span>Total</span>
+                <span id="total" class="total-value">R$ 0,00</span>
+            </div>
+
+            <button id="buy" class="buy" type="button">
+                Comprar ingresso
+            </button>
+
+            <div class="payment">
+                Você será direcionado para o ambiente seguro do PagBank
+                para concluir o pagamento.
+            </div>
+        </div>
+
+
+        <div id="loginPanel" class="login-panel hidden">
+            <button id="backToPurchase" class="back-button" type="button">← Voltar para a compra</button>
+            <h2 class="login-title">Acesse sua conta</h2>
+            <p class="login-subtitle">Entre ou crie sua conta para continuar com a compra do ingresso.</p>
+
+            <div class="auth-mode">
+                <button id="loginMode" type="button" class="active">Entrar</button>
+                <button id="registerMode" type="button">Criar conta</button>
+            </div>
+
+            <div id="authFeedback" class="auth-feedback hidden"></div>
+
+            <div id="emailStep">
+                <div class="auth-field">
+                    <label for="authEmail">E-mail</label>
+                    <input id="authEmail" type="email" autocomplete="email" placeholder="seuemail@exemplo.com">
+                </div>
+
+                <div id="passwordField" class="auth-field">
+                    <label for="authPassword">Senha</label>
+                    <input id="authPassword" type="password" autocomplete="current-password" placeholder="Digite sua senha">
+                </div>
+
+                <button id="authSubmit" class="auth-button" type="button">Entrar</button>
+                <button id="forgotPassword" class="auth-secondary" type="button">Esqueci minha senha</button>
+            </div>
+
+            <div id="createPasswordStep" class="hidden">
+                <div class="auth-field">
+                    <label for="newPassword">Crie sua senha</label>
+                    <input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres">
+                </div>
+                <div class="auth-field">
+                    <label for="confirmPassword">Confirme sua senha</label>
+                    <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Digite a senha novamente">
+                </div>
+                <button id="savePassword" class="auth-button" type="button">Criar senha e continuar</button>
+            </div>
+
+            <div id="emailSentStep" class="hidden">
+                <div class="auth-feedback success">Enviamos um link para seu e-mail. Abra o link para continuar e criar sua senha.</div>
+                <button id="changeEmail" class="auth-secondary" type="button">Usar outro e-mail</button>
+            </div>
+        </div>
+
+    </section>
+</main>
+
+<footer>
+    Venda online pelo Evento360 · Movixa Software
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyAtxKBNFb700TssBLWuy5Peq5pSfbdeXsA",
+    authDomain: "barebilheteria.firebaseapp.com",
+    projectId: "barebilheteria",
+    storageBucket: "barebilheteria.firebasestorage.app",
+    messagingSenderId: "68126613293",
+    appId: "1:68126613293:web:a1691b0fa4e50856097da4"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+const API_EVENTO = "https://southamerica-east1-barebilheteria.cloudfunctions.net/dadosVendaOnline";
+const API_CHECKOUT = "https://southamerica-east1-barebilheteria.cloudfunctions.net/criarCheckoutVendaPublico";
+
+const params = new URLSearchParams(window.location.search);
+const workspace = params.get("workspace");
+const eventoId = params.get("evento");
+
+let preco = 0, quantidade = 1, maxQuantidade = 1, modoCadastro = false, autenticando = false;
+
+const loading = document.getElementById("loading");
+const error = document.getElementById("error");
+const errorText = document.getElementById("errorText");
+const soldOut = document.getElementById("soldOut");
+const content = document.getElementById("content");
+const loginPanel = document.getElementById("loginPanel");
+const eventName = document.getElementById("eventName");
+const price = document.getElementById("price");
+const availability = document.getElementById("availability");
+const quantity = document.getElementById("quantity");
+const total = document.getElementById("total");
+const decrease = document.getElementById("decrease");
+const increase = document.getElementById("increase");
+const buy = document.getElementById("buy");
+
+const loginMode = document.getElementById("loginMode");
+const registerMode = document.getElementById("registerMode");
+const authEmail = document.getElementById("authEmail");
+const authPassword = document.getElementById("authPassword");
+const passwordField = document.getElementById("passwordField");
+const authSubmit = document.getElementById("authSubmit");
+const forgotPassword = document.getElementById("forgotPassword");
+const authFeedback = document.getElementById("authFeedback");
+const emailStep = document.getElementById("emailStep");
+const createPasswordStep = document.getElementById("createPasswordStep");
+const emailSentStep = document.getElementById("emailSentStep");
+const newPassword = document.getElementById("newPassword");
+const confirmPassword = document.getElementById("confirmPassword");
+const savePassword = document.getElementById("savePassword");
+const changeEmail = document.getElementById("changeEmail");
+const backToPurchase = document.getElementById("backToPurchase");
+
+function moeda(valor) {
+    return Number(valor).toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+}
+function erro(mensagem) {
+    loading.classList.add("hidden");
+    content.classList.add("hidden");
+    loginPanel.classList.add("hidden");
+    soldOut.classList.add("hidden");
+    errorText.textContent = mensagem;
+    error.classList.remove("hidden");
+}
+function atualizar() {
+    quantity.textContent = quantidade;
+    total.textContent = moeda(preco * quantidade);
+    decrease.disabled = quantidade <= 1;
+    increase.disabled = quantidade >= maxQuantidade;
+}
+function limparFeedback() {
+    authFeedback.textContent = "";
+    authFeedback.className = "auth-feedback hidden";
+}
+function feedback(mensagem, tipo="") {
+    authFeedback.textContent = mensagem;
+    authFeedback.className = "auth-feedback" + (tipo ? " " + tipo : "");
+}
+function mostrarLogin() {
+    content.classList.add("hidden");
+    loginPanel.classList.remove("hidden");
+    limparFeedback();
+    if (auth.currentUser && auth.currentUser.email) authEmail.value = auth.currentUser.email;
+    window.scrollTo({top:0, behavior:"smooth"});
+}
+function voltarCompra() {
+    loginPanel.classList.add("hidden");
+    content.classList.remove("hidden");
+    limparFeedback();
+}
+function alternarModo(cadastro) {
+    modoCadastro = cadastro;
+    loginMode.classList.toggle("active", !cadastro);
+    registerMode.classList.toggle("active", cadastro);
+    passwordField.classList.toggle("hidden", cadastro);
+    forgotPassword.classList.toggle("hidden", cadastro);
+    authSubmit.textContent = cadastro ? "Enviar link para meu e-mail" : "Entrar";
+    limparFeedback();
+}
+
+async function carregarEvento() {
+    if (!workspace || !eventoId) return erro("O link do evento é inválido.");
+    try {
+        const resposta = await fetch(API_EVENTO + "?workspace=" + encodeURIComponent(workspace) + "&evento=" + encodeURIComponent(eventoId));
+        const dados = await resposta.json();
+        if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar o evento.");
+
+        const evento = dados.evento;
+        preco = Number(evento.preco || 0);
+        const disponiveis = Number(evento.disponiveis || 0);
+        eventName.textContent = evento.nome || "Evento";
+        price.textContent = moeda(preco);
+        availability.textContent = evento.limite > 0 ? disponiveis + " ingresso(s) disponível(is)" : "Ingressos disponíveis";
+
+        if (evento.limite > 0 && disponiveis <= 0) {
+            loading.classList.add("hidden");
+            soldOut.classList.remove("hidden");
+            return;
+        }
+
+        maxQuantidade = evento.limite > 0 ? Math.min(disponiveis, 10) : 10;
+        quantidade = 1;
+        atualizar();
+        loading.classList.add("hidden");
+        content.classList.remove("hidden");
+
+        if (auth.currentUser) buy.textContent = "Continuar para pagamento";
+        await verificarLinkDeCadastro();
+    } catch (e) {
+        console.error("[EVENTO360]", e);
+        erro(e.message || "Não foi possível carregar o evento.");
+    }
+}
+
+async function verificarLinkDeCadastro() {
+    if (!auth.isSignInWithEmailLink(window.location.href)) return;
+
+    const emailSalvo = localStorage.getItem("evento360CadastroEmail");
+    if (!emailSalvo) {
+        mostrarLogin();
+        feedback("Informe o mesmo e-mail que recebeu o link para continuar.", "error");
+        return;
+    }
+
+    try {
+        mostrarLogin();
+        authEmail.value = emailSalvo;
+        feedback("Validando seu e-mail...");
+        const result = await auth.signInWithEmailLink(emailSalvo, window.location.href);
+        localStorage.removeItem("evento360CadastroEmail");
+
+        if (!result.user) throw new Error("Não foi possível validar seu e-mail.");
+
+        loginMode.classList.remove("active");
+        registerMode.classList.add("active");
+        emailStep.classList.add("hidden");
+        emailSentStep.classList.add("hidden");
+        createPasswordStep.classList.remove("hidden");
+        feedback("E-mail confirmado. Agora crie sua senha.", "success");
+
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        newPassword.focus();
+    } catch (e) {
+        console.error("[EVENTO360] Link:", e);
+        feedback("Este link não pôde ser validado. Solicite um novo link e tente novamente.", "error");
+    }
+}
+
+async function iniciarCheckout() {
+    if (autenticando) return;
+    buy.disabled = true;
+    buy.textContent = "Preparando pagamento...";
+    try {
+        const usuario = auth.currentUser;
+        if (!usuario) {
+            mostrarLogin();
+            return;
+        }
+
+        const idToken = await usuario.getIdToken();
+        const resposta = await fetch(API_CHECKOUT, {
+            method: "POST",
+            headers: {"Content-Type":"application/json", "Authorization":"Bearer " + idToken},
+            body: JSON.stringify({workspace, eventoId, quantidade})
+        });
+        const dados = await resposta.json();
+        if (!resposta.ok || !dados.sucesso || !dados.urlPagamento) {
+            throw new Error(dados.mensagem || "Não foi possível iniciar o pagamento.");
+        }
+        window.location.href = dados.urlPagamento;
+    } catch (e) {
+        console.error("[EVENTO360] Pagamento:", e);
+        alert(e.message || "Não foi possível iniciar o pagamento.");
+        buy.disabled = false;
+        buy.textContent = auth.currentUser ? "Continuar para pagamento" : "Comprar ingresso";
+    }
+}
+
+async function autenticar() {
+    if (autenticando) return;
+    const email = authEmail.value.trim().toLowerCase();
+
+    if (!email || !email.includes("@")) {
+        feedback("Informe um e-mail válido.", "error");
+        authEmail.focus();
+        return;
+    }
+
+    autenticando = true;
+    authSubmit.disabled = true;
+    limparFeedback();
+
+    try {
+        if (modoCadastro) {
+            await auth.sendSignInLinkToEmail(email, {
+                url: window.location.href,
+                handleCodeInApp: true
+            });
+            localStorage.setItem("evento360CadastroEmail", email);
+            emailStep.classList.add("hidden");
+            emailSentStep.classList.remove("hidden");
+            feedback("Link enviado. Abra o e-mail e clique no link para criar sua senha.", "success");
+        } else {
+            const senha = authPassword.value;
+            if (!senha) {
+                feedback("Informe sua senha.", "error");
+                authPassword.focus();
+                return;
+            }
+            await auth.signInWithEmailAndPassword(email, senha);
+            feedback("Login realizado. Preparando pagamento...", "success");
+            setTimeout(iniciarCheckout, 300);
+        }
+    } catch (e) {
+        console.error("[EVENTO360] Autenticação:", e);
+        let mensagem = e.message || "Não foi possível concluir a operação.";
+        if (e.code === "auth/invalid-credential" || e.code === "auth/wrong-password" || e.code === "auth/user-not-found") mensagem = "E-mail ou senha incorretos.";
+        if (e.code === "auth/invalid-email") mensagem = "Informe um e-mail válido.";
+        if (e.code === "auth/too-many-requests") mensagem = "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+        feedback(mensagem, "error");
+    } finally {
+        autenticando = false;
+        authSubmit.disabled = false;
+    }
+}
+
+async function criarSenhaEContinuar() {
+    const senha = newPassword.value;
+    const confirmacao = confirmPassword.value;
+
+    if (!senha || senha.length < 6) {
+        feedback("A senha deve ter pelo menos 6 caracteres.", "error");
+        newPassword.focus();
+        return;
+    }
+    if (senha !== confirmacao) {
+        feedback("As senhas não coincidem.", "error");
+        confirmPassword.focus();
+        return;
+    }
+
+    savePassword.disabled = true;
+    try {
+        if (!auth.currentUser) throw new Error("Sua sessão expirou. Solicite um novo link.");
+        await auth.currentUser.updatePassword(senha);
+        feedback("Senha criada. Preparando seu pagamento...", "success");
+        createPasswordStep.classList.add("hidden");
+        setTimeout(iniciarCheckout, 500);
+    } catch (e) {
+        console.error("[EVENTO360] Criar senha:", e);
+        feedback(e.code === "auth/requires-recent-login" ? "Sua validação expirou. Solicite um novo link." : (e.message || "Não foi possível criar sua senha."), "error");
+    } finally {
+        savePassword.disabled = false;
+    }
+}
+
+decrease.addEventListener("click", () => { if (quantidade > 1) { quantidade--; atualizar(); }});
+increase.addEventListener("click", () => { if (quantidade < maxQuantidade) { quantidade++; atualizar(); }});
+buy.addEventListener("click", iniciarCheckout);
+loginMode.addEventListener("click", () => alternarModo(false));
+registerMode.addEventListener("click", () => alternarModo(true));
+authSubmit.addEventListener("click", autenticar);
+savePassword.addEventListener("click", criarSenhaEContinuar);
+backToPurchase.addEventListener("click", voltarCompra);
+
+authPassword.addEventListener("keydown", e => { if (e.key === "Enter") autenticar(); });
+authEmail.addEventListener("keydown", e => { if (e.key === "Enter") modoCadastro ? autenticar() : authPassword.focus(); });
+
+forgotPassword.addEventListener("click", async () => {
+    const email = authEmail.value.trim().toLowerCase();
+    if (!email) {
+        feedback("Informe seu e-mail para receber o link de redefinição.", "error");
+        authEmail.focus();
+        return;
+    }
+    try {
+        await auth.sendPasswordResetEmail(email);
+        feedback("Enviamos um link para redefinir sua senha. Verifique seu e-mail.", "success");
+    } catch (e) {
+        feedback(e.code === "auth/user-not-found" ? "Não encontramos uma conta com esse e-mail. Use a opção Criar conta." : (e.message || "Não foi possível enviar o link."), "error");
+    }
+});
+
+changeEmail.addEventListener("click", () => {
+    localStorage.removeItem("evento360CadastroEmail");
+    emailSentStep.classList.add("hidden");
+    emailStep.classList.remove("hidden");
+    alternarModo(true);
+});
+
+auth.onAuthStateChanged(usuario => {
+    if (usuario) buy.textContent = "Continuar para pagamento";
+});
+
+carregarEvento();
+</script>
+</body>
+</html>
