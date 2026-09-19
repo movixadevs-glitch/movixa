@@ -163,8 +163,6 @@ footer{text-align:center;color:#888;font-size:12px;padding:20px}
                 <div class="auth-feedback success">Sua conta foi criada. Enviamos um link para seu e-mail para você criar sua senha. Depois de criar a senha, clique em "Entrar" acima para acessar sua conta e continuar a compra.</div>
                 <button id="changeEmail" class="auth-secondary" type="button">Usar outro e-mail</button>
             </div>
-                <button id="changeEmail" class="auth-secondary" type="button">Usar outro e-mail</button>
-            </div>
         </div>
 
     </section>
@@ -507,13 +505,23 @@ async function autenticar() {
 
 
 
-decrease.addEventListener("click", () => { if (quantidade > 1) { quantidade--; atualizar(); }});
-increase.addEventListener("click", () => { if (quantidade < maxQuantidade) { quantidade++; atualizar(); }});
+decrease.addEventListener("click", () => {
+    if (quantidade > 1) {
+        quantidade--;
+        atualizar();
+    }
+});
+
+increase.addEventListener("click", () => {
+    if (quantidade < maxQuantidade) {
+        quantidade++;
+        atualizar();
+});
+
 buy.addEventListener("click", iniciarCheckout);
 loginMode.addEventListener("click", () => alternarModo(false));
 registerMode.addEventListener("click", () => alternarModo(true));
 authSubmit.addEventListener("click", autenticar);
-.addEventListener("click", );
 backToPurchase.addEventListener("click", voltarCompra);
 
 authName.addEventListener("keydown", e => { if (e.key === "Enter") authEmail.focus(); });
