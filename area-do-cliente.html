@@ -116,12 +116,58 @@ async function downloadTicket(ticket){
     showFeedback(areaFeedback,"Não foi possível abrir o ingresso. Tente novamente.");
   }
 }
+
+async function validarPagamentosCliente() {
+  const user = auth.currentUser;
+
+  if (!user) {
+    return;
+  }
+
+  try {
+    const idToken = await user.getIdToken(true);
+
+    const response = await fetch(
+      "https://southamerica-east1-barebilheteria.cloudfunctions.net/validarIngressosCliente",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`
+        },
+        body: JSON.stringify({})
+      }
+    );
+
+    const dados = await response.json();
+
+    if (!response.ok || !dados.sucesso) {
+      console.error(
+        "[CLIENTE] Erro ao validar pagamentos:",
+        dados
+      );
+      return;
+    }
+
+    console.log(
+      "[CLIENTE] Pagamentos validados:",
+      dados.pagos
+    );
+
+  } catch (error) {
+    console.error(
+      "[CLIENTE] Erro ao chamar validação:",
+      error
+    );
+  }
+}
 async function carregarIngressos(user){
   ticketLoading.classList.remove("hidden");
   ticketList.innerHTML="";
   empty.classList.add("hidden");
   hideFeedback(areaFeedback);
   try{
+    await validarPagamentosCliente();
     const snapshot=await db.collection("CLIENTES").doc(user.uid).collection("INGRESSOS").get();
     const ingressos=[];
     snapshot.forEach(doc=>ingressos.push({id:doc.id,...doc.data()}));
