@@ -157,20 +157,10 @@ footer{text-align:center;color:#888;font-size:12px;padding:20px}
                 <button id="forgotPassword" class="auth-secondary" type="button">Esqueci minha senha</button>
             </div>
 
-            <div id="createPasswordStep" class="hidden">
-                <div class="auth-field">
-                    <label for="newPassword">Crie sua senha</label>
-                    <input id="newPassword" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres">
-                </div>
-                <div class="auth-field">
-                    <label for="confirmPassword">Confirme sua senha</label>
-                    <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Digite a senha novamente">
-                </div>
-                <button id="savePassword" class="auth-button" type="button">Criar senha e continuar</button>
-            </div>
+            <div id="createPasswordStep" class="hidden"></div>
 
             <div id="emailSentStep" class="hidden">
-                <div class="auth-feedback success">Enviamos um link para seu e-mail. Abra o link para continuar e criar sua senha.</div>
+                <div class="auth-feedback success">Sua conta foi criada. Enviamos um link para seu e-mail para você criar sua senha. Depois, volte a esta página e faça login para continuar a compra.</div>
                 <button id="changeEmail" class="auth-secondary" type="button">Usar outro e-mail</button>
             </div>
         </div>
@@ -233,11 +223,7 @@ const authSubmit = document.getElementById("authSubmit");
 const forgotPassword = document.getElementById("forgotPassword");
 const authFeedback = document.getElementById("authFeedback");
 const emailStep = document.getElementById("emailStep");
-const createPasswordStep = document.getElementById("createPasswordStep");
 const emailSentStep = document.getElementById("emailSentStep");
-const newPassword = document.getElementById("newPassword");
-const confirmPassword = document.getElementById("confirmPassword");
-const savePassword = document.getElementById("savePassword");
 const changeEmail = document.getElementById("changeEmail");
 const backToPurchase = document.getElementById("backToPurchase");
 
@@ -324,65 +310,9 @@ async function carregarEvento() {
 }
 
 async function verificarLinkDeCadastro() {
-    if (!auth.isSignInWithEmailLink(window.location.href)) return;
-
-    const emailSalvo = localStorage.getItem("evento360CadastroEmail");
-    const nomeSalvo = localStorage.getItem("evento360CadastroNome") || "";
-
-    if (!emailSalvo) {
-        mostrarLogin();
-        feedback("Informe o mesmo e-mail que recebeu o link para continuar.", "error");
-        return;
-    }
-
-    try {
-        mostrarLogin();
-        alternarModo(true);
-
-        authEmail.value = emailSalvo;
-        authName.value = nomeSalvo;
-
-        feedback("Validando seu e-mail...");
-
-        const result = await auth.signInWithEmailLink(
-            emailSalvo,
-            window.location.href
-        );
-
-        localStorage.removeItem("evento360CadastroEmail");
-        localStorage.removeItem("evento360CadastroNome");
-
-        if (!result.user) {
-            throw new Error("Não foi possível validar seu e-mail.");
-        }
-
-        loginMode.classList.remove("active");
-        registerMode.classList.add("active");
-        emailStep.classList.add("hidden");
-        emailSentStep.classList.add("hidden");
-        createPasswordStep.classList.remove("hidden");
-
-        feedback(
-            "E-mail confirmado. Agora crie sua senha.",
-            "success"
-        );
-
-        window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname + window.location.search
-        );
-
-        newPassword.focus();
-
-    } catch (e) {
-        console.error("[EVENTO360] Link:", e);
-
-        feedback(
-            "Este link não pôde ser validado. Solicite um novo link e tente novamente.",
-            "error"
-        );
-    }
+    // O cadastro agora usa e-mail/senha + redefinição de senha.
+    // Não existe mais fluxo de autenticação por link.
+    return;
 }
 
 async function iniciarCheckout() {
@@ -448,32 +378,59 @@ async function autenticar() {
 
     try {
         if (modoCadastro) {
+            // Mantém o mesmo fluxo utilizado anteriormente no CriarWorkspace:
+            // cria a conta com uma senha temporária e envia um e-mail
+            // para o usuário definir a própria senha.
+            if (auth.currentUser) {
+                await auth.signOut();
+            }
 
-            await auth.sendSignInLinkToEmail(email, {
-                url: window.location.href,
-                handleCodeInApp: true
-            });
+            const nome = authName.value.trim();
 
-            localStorage.setItem(
-                "evento360CadastroEmail",
-                email
-            );
+            const senhaTemporaria =
+                Math.random().toString(36).slice(-10) + "A1!";
 
-            localStorage.setItem(
-                "evento360CadastroNome",
-                authName.value.trim()
-            );
+            const userCredential =
+                await auth.createUserWithEmailAndPassword(
+                    email,
+                    senhaTemporaria
+                );
+
+            const usuario = userCredential.user;
+
+            if (!usuario) {
+                throw new Error("Não foi possível criar a conta.");
+            }
+
+            // Salva o cliente diretamente na raiz CLIENTES.
+            await db
+                .collection("CLIENTES")
+                .doc(usuario.uid)
+                .set({
+                    UID: usuario.uid,
+                    EMAIL: email,
+                    NOME: nome,
+                    dataCriacao: new Date().toISOString()
+                }, {
+                    merge: true
+                });
+
+            // Envia o mesmo tipo de e-mail utilizado no fluxo
+            // anterior para que o usuário defina sua própria senha.
+            await auth.sendPasswordResetEmail(email);
+
+            // Não deixa a conta autenticada com a senha temporária.
+            await auth.signOut();
 
             emailStep.classList.add("hidden");
             emailSentStep.classList.remove("hidden");
 
             feedback(
-                "Link enviado. Abra o e-mail e clique no link para criar sua senha.",
+                "Conta criada. Enviamos um link para seu e-mail para você criar sua senha.",
                 "success"
             );
 
         } else {
-
             const senha = authPassword.value;
 
             if (!senha) {
@@ -496,7 +453,6 @@ async function autenticar() {
         }
 
     } catch (e) {
-
         console.error("[EVENTO360] Autenticação:", e);
 
         let mensagem =
@@ -511,8 +467,16 @@ async function autenticar() {
             mensagem = "E-mail ou senha incorretos.";
         }
 
+        if (e.code === "auth/email-already-in-use") {
+            mensagem = "Já existe uma conta com este e-mail. Use a opção Entrar ou redefina sua senha.";
+        }
+
         if (e.code === "auth/invalid-email") {
             mensagem = "Informe um e-mail válido.";
+        }
+
+        if (e.code === "auth/weak-password") {
+            mensagem = "Não foi possível criar a conta. Tente novamente.";
         }
 
         if (e.code === "auth/too-many-requests") {
@@ -523,103 +487,12 @@ async function autenticar() {
         feedback(mensagem, "error");
 
     } finally {
-
         autenticando = false;
         authSubmit.disabled = false;
     }
 }
 
-async function criarSenhaEContinuar() {
-    const senha = newPassword.value;
-    const confirmacao = confirmPassword.value;
 
-    if (!senha || senha.length < 6) {
-        feedback(
-            "A senha deve ter pelo menos 6 caracteres.",
-            "error"
-        );
-        newPassword.focus();
-        return;
-    }
-
-    if (senha !== confirmacao) {
-        feedback(
-            "As senhas não coincidem.",
-            "error"
-        );
-        confirmPassword.focus();
-        return;
-    }
-
-    savePassword.disabled = true;
-
-    try {
-
-        const usuario = auth.currentUser;
-
-        if (!usuario) {
-            throw new Error(
-                "Sua sessão expirou. Solicite um novo link."
-            );
-        }
-
-        await usuario.updatePassword(senha);
-
-        const nome = authName.value.trim();
-        const email = usuario.email
-            ? usuario.email.trim().toLowerCase()
-            : "";
-
-        if (!nome) {
-            throw new Error(
-                "Não foi possível recuperar o nome informado no cadastro."
-            );
-        }
-
-        // Salva o cliente na raiz CLIENTES usando o UID
-        // gerado pelo Firebase Authentication como ID do documento.
-        await db
-            .collection("CLIENTES")
-            .doc(usuario.uid)
-            .set({
-                UID: usuario.uid,
-                EMAIL: email,
-                NOME: nome,
-                dataCriacao: new Date().toISOString()
-            }, {
-                merge: true
-            });
-
-        feedback(
-            "Cadastro concluído. Preparando seu pagamento...",
-            "success"
-        );
-
-        createPasswordStep.classList.add("hidden");
-
-        setTimeout(
-            iniciarCheckout,
-            500
-        );
-
-    } catch (e) {
-
-        console.error(
-            "[EVENTO360] Cadastro do cliente:",
-            e
-        );
-
-        feedback(
-            e.message ||
-            "Não foi possível concluir o cadastro.",
-            "error"
-        );
-
-    } finally {
-
-        savePassword.disabled = false;
-    }
-}
 
 decrease.addEventListener("click", () => { if (quantidade > 1) { quantidade--; atualizar(); }});
 increase.addEventListener("click", () => { if (quantidade < maxQuantidade) { quantidade++; atualizar(); }});
@@ -627,7 +500,7 @@ buy.addEventListener("click", iniciarCheckout);
 loginMode.addEventListener("click", () => alternarModo(false));
 registerMode.addEventListener("click", () => alternarModo(true));
 authSubmit.addEventListener("click", autenticar);
-savePassword.addEventListener("click", criarSenhaEContinuar);
+.addEventListener("click", );
 backToPurchase.addEventListener("click", voltarCompra);
 
 authName.addEventListener("keydown", e => { if (e.key === "Enter") authEmail.focus(); });
@@ -650,10 +523,10 @@ forgotPassword.addEventListener("click", async () => {
 });
 
 changeEmail.addEventListener("click", () => {
-    localStorage.removeItem("evento360CadastroEmail");
-    localStorage.removeItem("evento360CadastroNome");
     emailSentStep.classList.add("hidden");
     emailStep.classList.remove("hidden");
+    authEmail.value = "";
+    authName.value = "";
     alternarModo(true);
 });
 
