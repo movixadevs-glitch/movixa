@@ -160,7 +160,9 @@ footer{text-align:center;color:#888;font-size:12px;padding:20px}
             <div id="createPasswordStep" class="hidden"></div>
 
             <div id="emailSentStep" class="hidden">
-                <div class="auth-feedback success">Sua conta foi criada. Enviamos um link para seu e-mail para você criar sua senha. Depois, volte a esta página e faça login para continuar a compra.</div>
+                <div class="auth-feedback success">Sua conta foi criada. Enviamos um link para seu e-mail para você criar sua senha. Depois de criar a senha, clique em "Entrar" acima para acessar sua conta e continuar a compra.</div>
+                <button id="changeEmail" class="auth-secondary" type="button">Usar outro e-mail</button>
+            </div>
                 <button id="changeEmail" class="auth-secondary" type="button">Usar outro e-mail</button>
             </div>
         </div>
@@ -266,12 +268,23 @@ function voltarCompra() {
 }
 function alternarModo(cadastro) {
     modoCadastro = cadastro;
+
     loginMode.classList.toggle("active", !cadastro);
     registerMode.classList.toggle("active", cadastro);
+
+    // Ao trocar entre "Entrar" e "Criar conta", sempre libera
+    // novamente o formulário de autenticação.
+    emailStep.classList.remove("hidden");
+    emailSentStep.classList.add("hidden");
+
     passwordField.classList.toggle("hidden", cadastro);
     nameField.classList.toggle("hidden", !cadastro);
     forgotPassword.classList.toggle("hidden", cadastro);
-    authSubmit.textContent = cadastro ? "Enviar link para meu e-mail" : "Entrar";
+
+    authSubmit.textContent = cadastro
+        ? "Criar minha conta"
+        : "Entrar";
+
     limparFeedback();
 }
 
@@ -426,7 +439,7 @@ async function autenticar() {
             emailSentStep.classList.remove("hidden");
 
             feedback(
-                "Conta criada. Enviamos um link para seu e-mail para você criar sua senha.",
+                "Conta criada. Enviamos um link para seu e-mail para você criar sua senha. Depois, clique em "Entrar" acima para continuar.",
                 "success"
             );
 
@@ -494,24 +507,13 @@ async function autenticar() {
 
 
 
-decrease.addEventListener("click", () => {
-    if (quantidade > 1) {
-        quantidade--;
-        atualizar();
-    }
-});
-
-increase.addEventListener("click", () => {
-    if (quantidade < maxQuantidade) {
-        quantidade++;
-        atualizar();
-    }
-});
-
+decrease.addEventListener("click", () => { if (quantidade > 1) { quantidade--; atualizar(); }});
+increase.addEventListener("click", () => { if (quantidade < maxQuantidade) { quantidade++; atualizar(); }});
 buy.addEventListener("click", iniciarCheckout);
 loginMode.addEventListener("click", () => alternarModo(false));
 registerMode.addEventListener("click", () => alternarModo(true));
 authSubmit.addEventListener("click", autenticar);
+.addEventListener("click", );
 backToPurchase.addEventListener("click", voltarCompra);
 
 authName.addEventListener("keydown", e => { if (e.key === "Enter") authEmail.focus(); });
