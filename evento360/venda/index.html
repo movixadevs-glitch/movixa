@@ -138,6 +138,11 @@ footer{text-align:center;color:#888;font-size:12px;padding:20px}
             <div id="authFeedback" class="auth-feedback hidden"></div>
 
             <div id="emailStep">
+                <div id="nameField" class="auth-field hidden">
+                    <label for="authName">Nome</label>
+                    <input id="authName" type="text" autocomplete="name" placeholder="Seu nome completo">
+                </div>
+
                 <div class="auth-field">
                     <label for="authEmail">E-mail</label>
                     <input id="authEmail" type="email" autocomplete="email" placeholder="seuemail@exemplo.com">
@@ -179,6 +184,7 @@ footer{text-align:center;color:#888;font-size:12px;padding:20px}
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const firebaseConfig = {
     apiKey: "AIzaSyAtxKBNFb700TssBLWuy5Peq5pSfbdeXsA",
@@ -190,6 +196,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 const API_EVENTO = "https://southamerica-east1-barebilheteria.cloudfunctions.net/dadosVendaOnline";
 const API_CHECKOUT = "https://southamerica-east1-barebilheteria.cloudfunctions.net/criarCheckoutVendaPublico";
@@ -217,9 +224,11 @@ const buy = document.getElementById("buy");
 
 const loginMode = document.getElementById("loginMode");
 const registerMode = document.getElementById("registerMode");
+const authName = document.getElementById("authName");
 const authEmail = document.getElementById("authEmail");
 const authPassword = document.getElementById("authPassword");
 const passwordField = document.getElementById("passwordField");
+const nameField = document.getElementById("nameField");
 const authSubmit = document.getElementById("authSubmit");
 const forgotPassword = document.getElementById("forgotPassword");
 const authFeedback = document.getElementById("authFeedback");
@@ -274,6 +283,7 @@ function alternarModo(cadastro) {
     loginMode.classList.toggle("active", !cadastro);
     registerMode.classList.toggle("active", cadastro);
     passwordField.classList.toggle("hidden", cadastro);
+    nameField.classList.toggle("hidden", !cadastro);
     forgotPassword.classList.toggle("hidden", cadastro);
     authSubmit.textContent = cadastro ? "Enviar link para meu e-mail" : "Entrar";
     limparFeedback();
@@ -317,6 +327,8 @@ async function verificarLinkDeCadastro() {
     if (!auth.isSignInWithEmailLink(window.location.href)) return;
 
     const emailSalvo = localStorage.getItem("evento360CadastroEmail");
+    const nomeSalvo = localStorage.getItem("evento360CadastroNome") || "";
+
     if (!emailSalvo) {
         mostrarLogin();
         feedback("Informe o mesmo e-mail que recebeu o link para continuar.", "error");
@@ -325,25 +337,51 @@ async function verificarLinkDeCadastro() {
 
     try {
         mostrarLogin();
-        authEmail.value = emailSalvo;
-        feedback("Validando seu e-mail...");
-        const result = await auth.signInWithEmailLink(emailSalvo, window.location.href);
-        localStorage.removeItem("evento360CadastroEmail");
+        alternarModo(true);
 
-        if (!result.user) throw new Error("Não foi possível validar seu e-mail.");
+        authEmail.value = emailSalvo;
+        authName.value = nomeSalvo;
+
+        feedback("Validando seu e-mail...");
+
+        const result = await auth.signInWithEmailLink(
+            emailSalvo,
+            window.location.href
+        );
+
+        localStorage.removeItem("evento360CadastroEmail");
+        localStorage.removeItem("evento360CadastroNome");
+
+        if (!result.user) {
+            throw new Error("Não foi possível validar seu e-mail.");
+        }
 
         loginMode.classList.remove("active");
         registerMode.classList.add("active");
         emailStep.classList.add("hidden");
         emailSentStep.classList.add("hidden");
         createPasswordStep.classList.remove("hidden");
-        feedback("E-mail confirmado. Agora crie sua senha.", "success");
 
-        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        feedback(
+            "E-mail confirmado. Agora crie sua senha.",
+            "success"
+        );
+
+        window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname + window.location.search
+        );
+
         newPassword.focus();
+
     } catch (e) {
         console.error("[EVENTO360] Link:", e);
-        feedback("Este link não pôde ser validado. Solicite um novo link e tente novamente.", "error");
+
+        feedback(
+            "Este link não pôde ser validado. Solicite um novo link e tente novamente.",
+            "error"
+        );
     }
 }
 
@@ -379,6 +417,7 @@ async function iniciarCheckout() {
 
 async function autenticar() {
     if (autenticando) return;
+
     const email = authEmail.value.trim().toLowerCase();
 
     if (!email || !email.includes("@")) {
@@ -387,39 +426,104 @@ async function autenticar() {
         return;
     }
 
+    if (modoCadastro) {
+        const nome = authName.value.trim();
+
+        if (!nome) {
+            feedback("Informe seu nome.", "error");
+            authName.focus();
+            return;
+        }
+
+        if (nome.length > 100) {
+            feedback("O nome deve ter no máximo 100 caracteres.", "error");
+            authName.focus();
+            return;
+        }
+    }
+
     autenticando = true;
     authSubmit.disabled = true;
     limparFeedback();
 
     try {
         if (modoCadastro) {
+
             await auth.sendSignInLinkToEmail(email, {
                 url: window.location.href,
                 handleCodeInApp: true
             });
-            localStorage.setItem("evento360CadastroEmail", email);
+
+            localStorage.setItem(
+                "evento360CadastroEmail",
+                email
+            );
+
+            localStorage.setItem(
+                "evento360CadastroNome",
+                authName.value.trim()
+            );
+
             emailStep.classList.add("hidden");
             emailSentStep.classList.remove("hidden");
-            feedback("Link enviado. Abra o e-mail e clique no link para criar sua senha.", "success");
+
+            feedback(
+                "Link enviado. Abra o e-mail e clique no link para criar sua senha.",
+                "success"
+            );
+
         } else {
+
             const senha = authPassword.value;
+
             if (!senha) {
                 feedback("Informe sua senha.", "error");
                 authPassword.focus();
                 return;
             }
-            await auth.signInWithEmailAndPassword(email, senha);
-            feedback("Login realizado. Preparando pagamento...", "success");
+
+            await auth.signInWithEmailAndPassword(
+                email,
+                senha
+            );
+
+            feedback(
+                "Login realizado. Preparando pagamento...",
+                "success"
+            );
+
             setTimeout(iniciarCheckout, 300);
         }
+
     } catch (e) {
+
         console.error("[EVENTO360] Autenticação:", e);
-        let mensagem = e.message || "Não foi possível concluir a operação.";
-        if (e.code === "auth/invalid-credential" || e.code === "auth/wrong-password" || e.code === "auth/user-not-found") mensagem = "E-mail ou senha incorretos.";
-        if (e.code === "auth/invalid-email") mensagem = "Informe um e-mail válido.";
-        if (e.code === "auth/too-many-requests") mensagem = "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+
+        let mensagem =
+            e.message ||
+            "Não foi possível concluir a operação.";
+
+        if (
+            e.code === "auth/invalid-credential" ||
+            e.code === "auth/wrong-password" ||
+            e.code === "auth/user-not-found"
+        ) {
+            mensagem = "E-mail ou senha incorretos.";
+        }
+
+        if (e.code === "auth/invalid-email") {
+            mensagem = "Informe um e-mail válido.";
+        }
+
+        if (e.code === "auth/too-many-requests") {
+            mensagem =
+                "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+        }
+
         feedback(mensagem, "error");
+
     } finally {
+
         autenticando = false;
         authSubmit.disabled = false;
     }
@@ -430,27 +534,89 @@ async function criarSenhaEContinuar() {
     const confirmacao = confirmPassword.value;
 
     if (!senha || senha.length < 6) {
-        feedback("A senha deve ter pelo menos 6 caracteres.", "error");
+        feedback(
+            "A senha deve ter pelo menos 6 caracteres.",
+            "error"
+        );
         newPassword.focus();
         return;
     }
+
     if (senha !== confirmacao) {
-        feedback("As senhas não coincidem.", "error");
+        feedback(
+            "As senhas não coincidem.",
+            "error"
+        );
         confirmPassword.focus();
         return;
     }
 
     savePassword.disabled = true;
+
     try {
-        if (!auth.currentUser) throw new Error("Sua sessão expirou. Solicite um novo link.");
-        await auth.currentUser.updatePassword(senha);
-        feedback("Senha criada. Preparando seu pagamento...", "success");
+
+        const usuario = auth.currentUser;
+
+        if (!usuario) {
+            throw new Error(
+                "Sua sessão expirou. Solicite um novo link."
+            );
+        }
+
+        await usuario.updatePassword(senha);
+
+        const nome = authName.value.trim();
+        const email = usuario.email
+            ? usuario.email.trim().toLowerCase()
+            : "";
+
+        if (!nome) {
+            throw new Error(
+                "Não foi possível recuperar o nome informado no cadastro."
+            );
+        }
+
+        // Salva o cliente na raiz CLIENTES usando o UID
+        // gerado pelo Firebase Authentication como ID do documento.
+        await db
+            .collection("CLIENTES")
+            .doc(usuario.uid)
+            .set({
+                UID: usuario.uid,
+                EMAIL: email,
+                NOME: nome,
+                dataCriacao: new Date().toISOString()
+            }, {
+                merge: true
+            });
+
+        feedback(
+            "Cadastro concluído. Preparando seu pagamento...",
+            "success"
+        );
+
         createPasswordStep.classList.add("hidden");
-        setTimeout(iniciarCheckout, 500);
+
+        setTimeout(
+            iniciarCheckout,
+            500
+        );
+
     } catch (e) {
-        console.error("[EVENTO360] Criar senha:", e);
-        feedback(e.code === "auth/requires-recent-login" ? "Sua validação expirou. Solicite um novo link." : (e.message || "Não foi possível criar sua senha."), "error");
+
+        console.error(
+            "[EVENTO360] Cadastro do cliente:",
+            e
+        );
+
+        feedback(
+            e.message ||
+            "Não foi possível concluir o cadastro.",
+            "error"
+        );
+
     } finally {
+
         savePassword.disabled = false;
     }
 }
@@ -464,6 +630,7 @@ authSubmit.addEventListener("click", autenticar);
 savePassword.addEventListener("click", criarSenhaEContinuar);
 backToPurchase.addEventListener("click", voltarCompra);
 
+authName.addEventListener("keydown", e => { if (e.key === "Enter") authEmail.focus(); });
 authPassword.addEventListener("keydown", e => { if (e.key === "Enter") autenticar(); });
 authEmail.addEventListener("keydown", e => { if (e.key === "Enter") modoCadastro ? autenticar() : authPassword.focus(); });
 
@@ -484,6 +651,7 @@ forgotPassword.addEventListener("click", async () => {
 
 changeEmail.addEventListener("click", () => {
     localStorage.removeItem("evento360CadastroEmail");
+    localStorage.removeItem("evento360CadastroNome");
     emailSentStep.classList.add("hidden");
     emailStep.classList.remove("hidden");
     alternarModo(true);
