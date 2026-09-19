@@ -253,14 +253,14 @@ buy.addEventListener("click", async function () {
 
         const dados = await resposta.json();
 
-        if (!resposta.ok || !dados.sucesso || !dados.linkPagamento) {
+        if (!resposta.ok || !dados.sucesso || !dados.urlPagamento) {
             throw new Error(
                 dados.mensagem ||
                 "Não foi possível iniciar o pagamento."
             );
         }
 
-        window.location.href = dados.linkPagamento;
+        window.location.href = dados.urlPagamento;
 
     } catch (e) {
         console.error("[EVENTO360] Pagamento:", e);
