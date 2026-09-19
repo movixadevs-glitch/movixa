@@ -185,24 +185,26 @@ async function carregarEvento() {
             );
         }
 
-        preco = Number(dados.preco || 0);
-        const disponiveis = Number(dados.disponiveis || 0);
+        const evento = dados.evento;
 
-        eventName.textContent = dados.nome || "Evento";
+        preco = Number(evento.preco || 0);
+        const disponiveis = Number(evento.disponiveis || 0);
+
+        eventName.textContent = evento.nome || "Evento";
         price.textContent = moeda(preco);
 
         availability.textContent =
-            dados.limite > 0
+            evento.limite > 0
                 ? disponiveis + " ingresso(s) disponível(is)"
                 : "Ingressos disponíveis";
 
-        if (dados.limite > 0 && disponiveis <= 0) {
+        if (evento.limite > 0 && disponiveis <= 0) {
             loading.classList.add("hidden");
             soldOut.classList.remove("hidden");
             return;
         }
 
-        maxQuantidade = dados.limite > 0
+        maxQuantidade = evento.limite > 0
             ? Math.min(disponiveis, 10)
             : 10;
 
@@ -217,7 +219,7 @@ async function carregarEvento() {
         erro(e.message || "Não foi possível carregar o evento.");
     }
 }
-
+    
 decrease.addEventListener("click", function () {
     if (quantidade > 1) {
         quantidade--;
