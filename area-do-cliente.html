@@ -129,7 +129,10 @@ function gerarIngressoParaImpressao(ticket,nomeCliente){
     return;
   }
 
-  const numeroIngresso=ticket.numeroIngresso ? `Ingresso ${ticket.numeroIngresso}` : "Ingresso";
+  const numeroIngresso =
+  ticket.numeroGeralDoIngresso != null
+    ? `Ingresso ${ticket.numeroGeralDoIngresso}`
+    : "Ingresso";
   const valor=money(ticket.precoIngresso);
   const emitidoEm=new Date().toLocaleString("pt-BR");
   const qrPayload=`${workspace}|${codigoEvento}|${codigo}`;
@@ -321,7 +324,10 @@ async function carregarIngressos(user){
     if(!ingressos.length){empty.classList.remove("hidden");return;}
     ticketList.innerHTML=ingressos.map(ticket=>{
       const [statusClass,statusText]=statusLabel(ticket.status);
-      const numero=ticket.numeroIngresso?`Ingresso ${ticket.numeroIngresso}`:"Ingresso";
+      const numero =
+  ticket.numeroGeralDoIngresso != null
+    ? `Ingresso ${ticket.numeroGeralDoIngresso}`
+    : "Ingresso";
       const button=ticket.status==="PAID"
         ? `<button class="download" data-id="${escapeHtml(ticket.id)}" type="button">Gerar ingresso</button>`
         : `<button class="download disabled" type="button" disabled>${ticket.status==="AGUARDANDO_PAGAMENTO"?"Aguardando pagamento":"Indisponível"}</button>`;
