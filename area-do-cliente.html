@@ -22,6 +22,7 @@ main{width:min(1080px,92%);margin:42px auto 70px}
 .refresh{background:#f0f1f3;border-radius:9px;padding:10px 14px;font-weight:700;color:#333}
 .loading{text-align:center;padding:55px;color:#777}.empty{text-align:center;padding:60px 20px;color:#777}.empty strong{display:block;color:#333;font-size:18px;margin-bottom:7px}
 .ticket-list{display:grid;gap:16px}.ticket{border:1px solid #e4e4e4;border-radius:15px;padding:20px;display:flex;justify-content:space-between;gap:25px;align-items:center}.ticket-main{min-width:0}.event{font-size:20px;font-weight:800;margin-bottom:9px}.meta{display:flex;flex-wrap:wrap;gap:8px 18px;color:#666;font-size:14px}.meta b{color:#333}.status{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:13px;font-weight:800;padding:7px 10px;border-radius:999px}.status.paid{background:#eaf8ee;color:#18752b}.status.pending{background:#fff7d6;color:#856900}.status.other{background:#f0f1f3;color:#555}.download{flex:0 0 auto;background:#ffd400;color:#111;border-radius:10px;padding:12px 17px;font-weight:800}.download.disabled{background:#eee;color:#999;cursor:not-allowed}
+.print-ticket{position:fixed;left:-99999px;top:0;}
 @media(max-width:650px){header{padding:0 4%;}.header-right .email{display:none}main{width:94%;margin-top:25px}.area{padding:20px}.area-title{display:block}.refresh{margin-top:15px}.ticket{display:block}.download{width:100%;margin-top:18px}.login-card{margin:25px auto;padding:25px}}
 </style>
 </head>
@@ -61,6 +62,7 @@ main{width:min(1080px,92%);margin:42px auto 70px}
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const firebaseConfig={
   apiKey:"AIzaSyAtxKBNFb700TssBLWuy5Peq5pSfbdeXsA",
@@ -105,17 +107,112 @@ function statusLabel(status){
   if(status==="AGUARDANDO_PAGAMENTO")return ["pending","Pagamento em processamento"];
   return ["other",status||"Aguardando processamento"];
 }
-async function downloadTicket(ticket){
-  if(!ticket.pdfPath){return;}
+async function carregarNomeCliente(user){
   try{
-    let url=ticket.pdfPath;
-    if(!/^https?:\/\//i.test(url)) url=await storage.ref(url).getDownloadURL();
-    window.open(url,"_blank","noopener,noreferrer");
+    const clienteDoc=await db.collection("CLIENTES").doc(user.uid).get();
+    return clienteDoc.exists ? (clienteDoc.data().NOME || "") : "";
   }catch(error){
-    console.error("[CLIENTE] Erro ao abrir ingresso:",error);
-    showFeedback(areaFeedback,"Não foi possível abrir o ingresso. Tente novamente.");
+    console.error("[CLIENTE] Erro ao carregar nome:",error);
+    return "";
   }
 }
+
+function gerarIngressoParaImpressao(ticket,nomeCliente){
+  if(ticket.status!=="PAID") return;
+
+  const workspace=String(ticket.workspace||"");
+  const codigoEvento=String(ticket.codigoEvento||"");
+  const codigo=String(ticket.CODIGO||"");
+
+  if(!workspace || !codigoEvento || !codigo){
+    showFeedback(areaFeedback,"Os dados do ingresso ainda não estão completos. Tente novamente.");
+    return;
+  }
+
+  const numeroIngresso=ticket.numeroIngresso ? `Ingresso ${ticket.numeroIngresso}` : "Ingresso";
+  const valor=money(ticket.precoIngresso);
+  const emitidoEm=new Date().toLocaleString("pt-BR");
+  const qrPayload=`${workspace}|${codigoEvento}|${codigo}`;
+
+  const janela=window.open("","_blank","width=500,height=850");
+  if(!janela){
+    showFeedback(areaFeedback,"Permita a abertura de janelas para gerar o ingresso.");
+    return;
+  }
+
+  const html=`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Ingresso - ${escapeHtml(ticket.nomeEvento||"Evento")}</title>
+<style>
+@page{size:80mm auto;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;font-family:Arial,Helvetica,sans-serif;color:#000}
+body{width:80mm;padding:4mm}
+.ticket{width:72mm;border:1px solid #000;border-radius:10px;overflow:hidden;background:#fff}
+.header{text-align:center;padding:10px 8px 4px}
+.brand{font-size:24px;font-weight:800;letter-spacing:-.5px}.brand span{color:#d1a300}
+.evento{text-align:center;padding:4px 10px 12px;border-bottom:2px dashed #000}
+.evento h2{margin:4px 0 8px;font-size:20px;line-height:1.2;word-break:break-word}
+.event-code{font-size:12px;font-weight:bold;margin-top:5px}
+.faixa{margin:12px auto 0;padding:7px 8px;border:1px solid #000;border-radius:8px;font-size:12px;font-weight:bold}
+.bloco{padding:14px 10px}
+.linha{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px;font-size:13px}.label{font-weight:bold}.valor{font-weight:bold;text-align:right;word-break:break-word}
+.total{background:#fff;padding:10px;border-radius:12px;margin-top:10px;border:1px solid #ddd}.totalValor{font-size:20px;font-weight:bold}
+.identificacao{border-top:2px dashed #000;margin-top:16px;padding-top:16px;text-align:center}
+.identificacao h3{margin:0 0 10px;font-size:16px}
+#qrcode{display:flex;justify-content:center;margin:8px auto 10px}#qrcode img,#qrcode canvas{display:block;width:46mm!important;height:46mm!important}
+.codigo{margin-top:10px;font-family:monospace;font-size:16px;font-weight:bold;letter-spacing:2px;word-break:break-all}
+.info{margin-top:16px;font-size:12px;text-align:left}.info div{margin-bottom:6px}
+.rodape{margin-top:16px;padding:12px 8px;border-top:2px dashed #000;text-align:center;font-size:10px}
+.print-button{display:block;margin:18px auto 0;padding:10px 18px;border:0;border-radius:8px;background:#ffd400;font-weight:bold;cursor:pointer}
+@media print{.print-button{display:none}body{padding:4mm}.ticket{width:72mm}}
+</style>
+</head>
+<body>
+<div class="ticket">
+  <div class="header"><div class="brand">Evento<span>360</span></div></div>
+  <div class="evento">
+    <h2>${escapeHtml(ticket.nomeEvento||"Evento")}</h2>
+    <div class="event-code">Código do evento: ${escapeHtml(codigoEvento)}</div>
+    <div class="event-code">${escapeHtml(numeroIngresso)}</div>
+    <div class="faixa">ACESSO CONFERIDO</div>
+  </div>
+  <div class="bloco">
+    <div class="linha"><span class="label">Cliente</span><span class="valor">${escapeHtml(nomeCliente||ticket.nomeCliente||"-")}</span></div>
+    <div class="linha"><span class="label">Valor</span><span class="valor">${escapeHtml(valor)}</span></div>
+    <div class="total"><div class="linha" style="margin:0"><span class="label">Total</span><span class="totalValor">${escapeHtml(valor)}</span></div></div>
+    <div class="identificacao">
+      <h3>QR Code</h3>
+      <div id="qrcode"></div>
+      <div class="codigo">${escapeHtml(codigo)}</div>
+      <div class="info">
+        <div><b>Tipo do ingresso:</b> QR Code</div>
+        <div><b>Emitido em:</b> ${escapeHtml(emitidoEm)}</div>
+      </div>
+      <div class="rodape">Ingresso pessoal e intransferível.</div>
+    </div>
+  </div>
+</div>
+<button class="print-button" onclick="window.print()">Imprimir ingresso</button>
+<script>
+new QRCode(document.getElementById("qrcode"),{
+  text:${JSON.stringify(qrPayload)},
+  width:180,
+  height:180,
+  correctLevel:QRCode.CorrectLevel.M
+});
+window.onload=function(){setTimeout(function(){window.print()},400)};
+<\/script>
+</body>
+</html>`;
+
+  janela.document.open();
+  janela.document.write(html);
+  janela.document.close();
+}
+
 
 async function validarPagamentosCliente() {
   const user = auth.currentUser;
@@ -168,9 +265,13 @@ async function carregarIngressos(user){
   hideFeedback(areaFeedback);
   try{
     await validarPagamentosCliente();
-    const snapshot=await db.collection("CLIENTES").doc(user.uid).collection("REGISTROSINGRESSOSDOCLIENTE").get();
+    const [clienteDoc,snapshot]=await Promise.all([
+      db.collection("CLIENTES").doc(user.uid).get(),
+      db.collection("CLIENTES").doc(user.uid).collection("REGISTROSINGRESSOSDOCLIENTE").get()
+    ]);
+    const nomeCliente=clienteDoc.exists ? (clienteDoc.data().NOME || "") : "";
     const ingressos=[];
-    snapshot.forEach(doc=>ingressos.push({id:doc.id,...doc.data()}));
+    snapshot.forEach(doc=>ingressos.push({id:doc.id,...doc.data(),nomeCliente}));
     ingressos.sort((a,b)=>{
       const ta=a.ingressoCriadoEm?.toMillis?a.ingressoCriadoEm.toMillis():0;
       const tb=b.ingressoCriadoEm?.toMillis?b.ingressoCriadoEm.toMillis():0;
@@ -181,19 +282,19 @@ async function carregarIngressos(user){
     ticketList.innerHTML=ingressos.map(ticket=>{
       const [statusClass,statusText]=statusLabel(ticket.status);
       const numero=ticket.numeroIngresso?`Ingresso ${ticket.numeroIngresso}`:"Ingresso";
-      const button=ticket.pdfPath
-        ? `<button class="download" data-id="${escapeHtml(ticket.id)}" type="button">Baixar ingresso</button>`
+      const button=ticket.status==="PAID"
+        ? `<button class="download" data-id="${escapeHtml(ticket.id)}" type="button">Gerar ingresso</button>`
         : `<button class="download disabled" type="button" disabled>${ticket.status==="AGUARDANDO_PAGAMENTO"?"Aguardando pagamento":"Indisponível"}</button>`;
       return `<article class="ticket">
         <div class="ticket-main">
           <div class="event">${escapeHtml(ticket.nomeEvento||"Evento")}</div>
-          <div class="meta"><span><b>${escapeHtml(numero)}</b></span><span>Código: <b>${escapeHtml(ticket.codigoEvento||"-")}</b></span><span>Valor: <b>${money(ticket.precoIngresso)}</b></span></div>
+          <div class="meta"><span><b>${escapeHtml(numero)}</b></span><span>Código do evento: <b>${escapeHtml(ticket.codigoEvento||"-")}</b></span><span>Valor: <b>${money(ticket.precoIngresso)}</b></span></div>
           <div class="status ${statusClass}">${escapeHtml(statusText)}</div>
         </div>${button}
       </article>`;
     }).join("");
     ticketList.querySelectorAll("button[data-id]").forEach(button=>button.addEventListener("click",()=>{
-      const ticket=ingressos.find(item=>item.id===button.dataset.id);if(ticket)downloadTicket(ticket);
+      const ticket=ingressos.find(item=>item.id===button.dataset.id);if(ticket)gerarIngressoParaImpressao(ticket,nomeCliente);
     }));
   }catch(error){
     console.error("[CLIENTE] Erro ao carregar ingressos:",error);
