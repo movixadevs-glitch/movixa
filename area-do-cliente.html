@@ -168,7 +168,7 @@ async function carregarIngressos(user){
   hideFeedback(areaFeedback);
   try{
     await validarPagamentosCliente();
-    const snapshot=await db.collection("CLIENTES").doc(user.uid).collection("INGRESSOS").get();
+    const snapshot=await db.collection("CLIENTES").doc(user.uid).collection("REGISTROSINGRESSOSDOCLIENTE").get();
     const ingressos=[];
     snapshot.forEach(doc=>ingressos.push({id:doc.id,...doc.data()}));
     ingressos.sort((a,b)=>{
