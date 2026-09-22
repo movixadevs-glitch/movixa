@@ -377,6 +377,7 @@ async function iniciarCheckout() {
         if (!resposta.ok || !dados.sucesso || !dados.urlPagamento) {
             throw new Error(dados.mensagem || "Não foi possível iniciar o pagamento.");
         }
+        alert("Atenção: Após concluir o pagamento, acesse https://movixa.com.br/area-do-cliente.html para baixar o seu ingresso!");
         window.location.href = dados.urlPagamento;
     } catch (e) {
         console.error("[EVENTO360] Pagamento:", e);
