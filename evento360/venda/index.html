@@ -94,25 +94,20 @@ footer{text-align:center;color:#888;font-size:12px;padding:20px}
             <h1 id="eventName">Evento</h1>
             <div class="divider"></div>
 
+            <div class="divider"></div>
+
+            <!-- EXIBIÇÃO DA DATA E HORA DO EVENTO -->
+            <div id="eventDateTime" style="text-align:center; font-weight:600; color:#555; margin-bottom:15px;"></div>
+
+            <!-- SELETOR DE TIPOS DE INGRESSO -->
+            <div class="field-label">Tipo de Ingresso</div>
+            <div class="field" style="margin-bottom:20px;">
+                <select id="tipoIngressoSelect" style="width:100%; height:50px; border:1px solid #ddd; border-radius:11px; padding:0 14px; font-size:15px; outline:none; background:#fff;">
+                </select>
+            </div>
+
             <div class="price-label">Ingresso</div>
             <div id="price" class="price">R$ 0,00</div>
-
-            <div id="availability" class="availability">
-                Ingressos disponíveis
-            </div>
-
-            <label class="field-label">Quantidade</label>
-
-            <div class="quantity">
-                <button id="decrease" type="button">−</button>
-                <div id="quantity" class="quantity-value">1</div>
-                <button id="increase" type="button">+</button>
-            </div>
-
-            <div class="total">
-                <span>Total</span>
-                <span id="total" class="total-value">R$ 0,00</span>
-            </div>
 
             <button id="buy" class="buy" type="button">
                 Comprar ingresso
@@ -227,6 +222,9 @@ const emailSentStep = document.getElementById("emailSentStep");
 const changeEmail = document.getElementById("changeEmail");
 const backToPurchase = document.getElementById("backToPurchase");
 
+let tiposIngressosDisponiveis = [];
+let tipoIngressoSelecionadoId = null;
+
 function moeda(valor) {
     return Number(valor).toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
 }
@@ -294,21 +292,37 @@ async function carregarEvento() {
         if (!resposta.ok || !dados.sucesso) throw new Error(dados.mensagem || "Não foi possível carregar o evento.");
 
         const evento = dados.evento;
-        preco = Number(evento.preco || 0);
-        const disponiveis = Number(evento.disponiveis || 0);
         eventName.textContent = evento.nome || "Evento";
-        price.textContent = moeda(preco);
-        availability.textContent = evento.limite > 0 ? disponiveis + " ingresso(s) disponível(is)" : "Ingressos disponíveis";
+        
+        // Exibe data e hora se existirem
+        const dataHoraEl = document.getElementById("eventDateTime");
+        if (evento.dataEvento || evento.horaEvento) {
+            dataHoraEl.textContent = `📅 ${evento.dataEvento || ""} ${evento.horaEvento ? "às " + evento.horaEvento : ""}`;
+            dataHoraEl.style.display = "block";
+        } else {
+            dataHoraEl.style.display = "none";
+        }
 
-        if (evento.limite > 0 && disponiveis <= 0) {
+        tiposIngressosDisponiveis = evento.tiposIngressos || [];
+        
+        if (tiposIngressosDisponiveis.length === 0) {
             loading.classList.add("hidden");
             soldOut.classList.remove("hidden");
             return;
         }
 
-        maxQuantidade = evento.limite > 0 ? Math.min(disponiveis, 10) : 10;
-        quantidade = 1;
-        atualizar();
+        const selectIngresso = document.getElementById("tipoIngressoSelect");
+        selectIngresso.innerHTML = tiposIngressosDisponiveis.map(tipo => 
+            `<option value="${tipo.id}" data-preco="${tipo.preco}" data-limite="${tipo.limite}" data-vendidos="${tipo.vendidos}" data-disponiveis="${tipo.disponiveis}">${tipo.nome} - R$ ${tipo.preco.toFixed(2)}</option>`
+        ).join("");
+
+        // Seleciona o primeiro por padrão e atualiza valores
+        selecionarTipoIngresso(tiposIngressosDisponiveis[0].id);
+
+        selectIngresso.addEventListener("change", (e) => {
+            selecionarTipoIngresso(e.target.value);
+        });
+
         loading.classList.add("hidden");
         content.classList.remove("hidden");
 
@@ -318,6 +332,22 @@ async function carregarEvento() {
         console.error("[EVENTO360]", e);
         erro(e.message || "Não foi possível carregar o evento.");
     }
+}
+
+function selecionarTipoIngresso(id) {
+    tipoIngressoSelecionadoId = id;
+    const tipoEscolhido = tiposIngressosDisponiveis.find(t => t.id === id);
+    if (!tipoEscolhido) return;
+
+    preco = Number(tipoEscolhido.preco || 0);
+    const disponiveis = Number(tipoEscolhido.disponiveis || 0);
+    
+    price.textContent = moeda(preco);
+    availability.textContent = tipoEscolhido.limite > 0 ? disponiveis + " ingresso(s) disponível(is)" : "Ingressos disponíveis";
+
+    maxQuantidade = tipoEscolhido.limite > 0 ? Math.min(disponiveis, 10) : 10;
+    if (quantidade > maxQuantidade) quantidade = Math.max(1, maxQuantidade);
+    atualizar();
 }
 
 async function verificarLinkDeCadastro() {
@@ -341,7 +371,7 @@ async function iniciarCheckout() {
         const resposta = await fetch(API_CHECKOUT, {
             method: "POST",
             headers: {"Content-Type":"application/json", "Authorization":"Bearer " + idToken},
-            body: JSON.stringify({workspace, eventoId, quantidade})
+            body: JSON.stringify({workspace, eventoId, quantidade, tipoIngressoId: tipoIngressoSelecionadoId})
         });
         const dados = await resposta.json();
         if (!resposta.ok || !dados.sucesso || !dados.urlPagamento) {
