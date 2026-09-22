@@ -237,6 +237,8 @@ body{width:80mm;padding:4mm}
       </div>
       <div class="codigo">${escapeHtml(codigo)}</div>
       <div class="info">
+        <div><b>Tipo/Categoria:</b> ${escapeHtml(ticket.nomeTipoIngresso || "Padrão")}</div>
+        <div><b>Data do Evento:</b> ${escapeHtml(ticket.dataEventoStr || "-")} ${escapeHtml(ticket.horaEventoStr ? "às " + ticket.horaEventoStr : "")}</div>
         <div><b>Tipo do ingresso:</b> QR Code</div>
         <div><b>Emitido em:</b> ${escapeHtml(emitidoEm)}</div>
       </div>
@@ -334,7 +336,13 @@ async function carregarIngressos(user){
       return `<article class="ticket">
         <div class="ticket-main">
           <div class="event">${escapeHtml(ticket.nomeEvento||"Evento")}</div>
-          <div class="meta"><span><b>${escapeHtml(numero)}</b></span><span>Código do evento: <b>${escapeHtml(ticket.codigoEvento||"-")}</b></span><span>Valor: <b>${money(ticket.precoIngresso)}</b></span></div>
+          <div class="meta">
+            <span><b>${escapeHtml(numero)}</b></span>
+            <span>Tipo: <b>${escapeHtml(ticket.nomeTipoIngresso || "Padrão")}</b></span>
+            <span>Data/Hora: <b>${escapeHtml(ticket.dataEventoStr || "")} ${escapeHtml(ticket.horaEventoStr ? "às " + ticket.horaEventoStr : "")}</b></span>
+            <span>Código do evento: <b>${escapeHtml(ticket.codigoEvento||"-")}</b></span>
+            <span>Valor: <b>${money(ticket.precoIngresso)}</b></span>
+          </div>
           <div class="status ${statusClass}">${escapeHtml(statusText)}</div>
         </div>${button}
       </article>`;
