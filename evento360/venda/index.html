@@ -533,23 +533,6 @@ async function autenticar() {
     }
 }
 
-
-
-decrease.addEventListener("click", () => {
-    if (quantidade > 1) {
-        quantidade--;
-        atualizar();
-    }
-});
-
-increase.addEventListener("click", () => {
-    if (quantidade < maxQuantidade) {
-        quantidade++;
-        atualizar();
-
-    }
-});
-
 buy.addEventListener("click", iniciarCheckout);
 loginMode.addEventListener("click", () => alternarModo(false));
 registerMode.addEventListener("click", () => alternarModo(true));
