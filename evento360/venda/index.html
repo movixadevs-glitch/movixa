@@ -237,10 +237,10 @@ function erro(mensagem) {
     error.classList.remove("hidden");
 }
 function atualizar() {
-    quantity.textContent = quantidade;
-    total.textContent = moeda(preco * quantidade);
-    decrease.disabled = quantidade <= 1;
-    increase.disabled = quantidade >= maxQuantidade;
+    // Como a quantidade de itens por seleção é 1, mantemos apenas a atualização de segurança se necessário
+    if (typeof total !== 'undefined' && total) {
+        total.textContent = moeda(preco * quantidade);
+    }
 }
 function limparFeedback() {
     authFeedback.textContent = "";
