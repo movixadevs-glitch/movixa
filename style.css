@@ -785,55 +785,9 @@ footer a {
 
 @media(max-width:980px) {
 
-    .hero {
-
-        flex-direction: column;
-
-        text-align: center;
-
-    }
-
-    .hero h1 {
-
-        font-size: 48px;
-
-        line-height: 58px;
-
-    }
-
-    .navbar {
-
-        padding: 0 25px;
-
-    }
-
-    nav {
-
-        display: none;
-
-    }
-
     section {
 
         padding: 80px 8%;
-
-    }
-
-    .hero-image {
-
-        margin-top: 40px;
-
-    }
-
-    .hero-image img {
-
-        max-width: 340px;
-
-    }
-
-    .cards {
-
-        grid-template-columns: 1fr;
 
     }
 
@@ -853,6 +807,102 @@ footer a {
 
     }
 
+   .navbar {
+        height: auto;
+        min-height: 70px;
+        flex-direction: column;
+        padding: 15px 20px;
+        gap: 12px;
+    }
+
+    .logo {
+        font-size: 18px;
+        gap: 10px;
+    }
+
+    .logo img {
+        width: 36px;
+    }
+
+    nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px 18px;
+        font-size: 14px;
+    }
+
+    .language {
+        gap: 8px;
+    }
+
+    .language button {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding-top: 180px; /* Ajustado para compensar a navbar expandida em coluna */
+    }
+
+    .hero h1 {
+        font-size: 38px;
+        line-height: 46px;
+    }
+
+    .hero p {
+        font-size: 18px;
+        line-height: 28px;
+    }
+
+    section {
+        padding: 60px 6%;
+    }
+
+    section h2 {
+        font-size: 32px;
+    }
+
+    section p {
+        font-size: 16px;
+        line-height: 26px;
+    }
+
+    .hero-image {
+        margin-top: 30px;
+    }
+
+    .hero-image img {
+        max-width: 280px;
+    }
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .primaryButton,
+    .secondaryButton {
+        width: 100%;
+        text-align: center;
+        padding: 15px 20px;
+    }
+
+    footer {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+        padding: 30px 20px;
+    }
+
+    footer div {
+        margin-left: 0;
+    }
+
+    footer a {
+        margin: 0 10px;
+    }
 
 
 }
